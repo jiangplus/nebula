@@ -18,3 +18,11 @@
 - Removed the `add_foreign_key :collection_redirects, :collections` foreign key
 - Removed `has_many :collection_redirects, dependent: :destroy` from `Collection` model
 - Deleted `app/models/collection_redirect.rb`
+
+## 4. Renamed `password_resets` table to `auth_codes` with `code_type` field
+- Renamed table from `password_resets` to `auth_codes` in the migration
+- Added `code_type` string field to identify types of auth codes (e.g., "password_reset", "email_verification")
+- Added index on `code_type` column for querying by type
+- Updated foreign key from `add_foreign_key :password_resets, :users` to `add_foreign_key :auth_codes, :users`
+- Updated `User` model: changed `has_many :password_resets` to `has_many :auth_codes`
+- Deleted `app/models/password_reset.rb` and created `app/models/auth_code.rb`

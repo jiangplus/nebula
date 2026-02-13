@@ -83,15 +83,17 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
     add_index :email_subscribers, :user_id, where: "user_id IS NOT NULL"
     add_index :email_subscribers, :token, unique: true
 
-    create_table :password_resets, id: false do |t|
+    create_table :auth_codes, id: false do |t|
       t.string :id, null: false, primary_key: true
+      t.string :code_type, null: false
       t.string :token, null: false
       t.string :user_id, null: false
       t.boolean :used, default: false, null: false
       t.datetime :created_at, null: false
     end
-    add_index :password_resets, :token, unique: true
-    add_index :password_resets, :user_id
+    add_index :auth_codes, :token, unique: true
+    add_index :auth_codes, :user_id
+    add_index :auth_codes, :code_type
 
     create_table :user_invites, id: false do |t|
       t.string :id, null: false, primary_key: true
@@ -161,7 +163,7 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
     add_foreign_key :access_tokens, :users
     add_foreign_key :email_subscribers, :collections
     add_foreign_key :email_subscribers, :users
-    add_foreign_key :password_resets, :users
+    add_foreign_key :auth_codes, :users
     add_foreign_key :user_invites, :users, column: :owner_id
     add_foreign_key :remote_follows, :remote_users
     add_foreign_key :remote_follows, :collections

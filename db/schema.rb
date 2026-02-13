@@ -22,6 +22,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
     t.index ["user_id"], name: "index_access_tokens_on_user_id"
   end
 
+  create_table "auth_codes", id: :string, force: :cascade do |t|
+    t.string "code_type", null: false
+    t.datetime "created_at", null: false
+    t.string "token", null: false
+    t.boolean "used", default: false, null: false
+    t.string "user_id", null: false
+    t.index ["code_type"], name: "index_auth_codes_on_code_type"
+    t.index ["token"], name: "index_auth_codes_on_token", unique: true
+    t.index ["user_id"], name: "index_auth_codes_on_user_id"
+  end
+
   create_table "collections", id: :string, force: :cascade do |t|
     t.string "actor_id"
     t.string "alias", null: false
@@ -68,9 +79,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
     t.index ["post_id"], name: "index_jobs_on_post_id"
   end
 
-  create_table "local_timeline", id: :string, force: :cascade do |t|
-  end
-
   create_table "oauth_client_states", primary_key: "state", id: :string, force: :cascade do |t|
     t.string "client_id", null: false
     t.datetime "created_at", null: false
@@ -87,15 +95,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
     t.string "user_id", null: false
     t.index ["user_id", "provider", "client_id"], name: "index_oauth_users_on_user_id_and_provider_and_client_id", unique: true
     t.index ["user_id"], name: "index_oauth_users_on_user_id"
-  end
-
-  create_table "password_resets", id: :string, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "token", null: false
-    t.boolean "used", default: false, null: false
-    t.string "user_id", null: false
-    t.index ["token"], name: "index_password_resets_on_token", unique: true
-    t.index ["user_id"], name: "index_password_resets_on_user_id"
   end
 
   create_table "posts", id: :string, force: :cascade do |t|
@@ -165,12 +164,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
   end
 
   add_foreign_key "access_tokens", "users"
+  add_foreign_key "auth_codes", "users"
   add_foreign_key "collections", "users", column: "owner_id"
   add_foreign_key "email_subscribers", "collections"
   add_foreign_key "email_subscribers", "users"
   add_foreign_key "jobs", "posts"
   add_foreign_key "oauth_users", "users"
-  add_foreign_key "password_resets", "users"
   add_foreign_key "posts", "collections"
   add_foreign_key "posts", "users", column: "owner_id"
   add_foreign_key "remote_follow_requests", "collections"
