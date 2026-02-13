@@ -29,6 +29,7 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
       t.string :actor_id
       t.string :shared_inbox_url
       t.text :private_key
+      t.jsonb :metadata, default: {}, null: false
       t.timestamps
     end
     add_index :collections, :alias, unique: true
@@ -58,12 +59,6 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
     add_index :posts, :ap_id, unique: true, where: "ap_id IS NOT NULL"
     add_index :posts, [:collection_id, :slug], unique: true, where: "collection_id IS NOT NULL AND slug IS NOT NULL"
     add_index :posts, [:collection_id, :pinned_position], where: "pinned_position IS NOT NULL"
-
-    create_table :collection_attributes, primary_key: [:collection_id, :attribute] do |t|
-      t.string :collection_id, null: false
-      t.string :attribute, null: false
-      t.string :value
-    end
 
     create_table :access_tokens, id: false do |t|
       t.string :token, null: false, primary_key: true
@@ -159,26 +154,10 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
     end
     add_index :jobs, :post_id
 
-    create_table :collection_redirects, primary_key: [:collection_id, :prev_alias] do |t|
-      t.string :collection_id, null: false
-      t.string :prev_alias, null: false
-      t.datetime :created_at, null: false
-    end
-
-    create_table :collection_passwords, id: false do |t|
-      t.string :collection_id, null: false, primary_key: true
-      t.string :password_digest, null: false
-    end
-
-    create_table :local_timeline, id: false do |t|
-      t.string :id, null: false, primary_key: true
-    end
-
     # Foreign keys
     add_foreign_key :collections, :users, column: :owner_id
     add_foreign_key :posts, :users, column: :owner_id
     add_foreign_key :posts, :collections
-    add_foreign_key :collection_attributes, :collections
     add_foreign_key :access_tokens, :users
     add_foreign_key :email_subscribers, :collections
     add_foreign_key :email_subscribers, :users
@@ -190,7 +169,5 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
     add_foreign_key :remote_follow_requests, :collections
     add_foreign_key :oauth_users, :users
     add_foreign_key :jobs, :posts
-    add_foreign_key :collection_redirects, :collections
-    add_foreign_key :collection_passwords, :collections
   end
 end

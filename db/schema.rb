@@ -15,27 +15,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
   enable_extension "pg_catalog.plpgsql"
 
   create_table "access_tokens", primary_key: "token", id: :string, force: :cascade do |t|
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.boolean "one_time", default: false, null: false
     t.string "user_id", null: false
     t.index ["user_id"], name: "index_access_tokens_on_user_id"
-  end
-
-  create_table "collection_attributes", primary_key: ["collection_id", "attribute"], force: :cascade do |t|
-    t.string "attribute", null: false
-    t.string "collection_id", null: false
-    t.string "value"
-  end
-
-  create_table "collection_passwords", primary_key: "collection_id", id: :string, force: :cascade do |t|
-    t.string "password_digest", null: false
-  end
-
-  create_table "collection_redirects", primary_key: ["collection_id", "prev_alias"], force: :cascade do |t|
-    t.string "collection_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.string "prev_alias", null: false
   end
 
   create_table "collections", id: :string, force: :cascade do |t|
@@ -44,6 +28,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.string "format"
+    t.jsonb "metadata", default: {}, null: false
     t.string "owner_id", null: false
     t.text "post_signature"
     t.text "private_key"
@@ -66,7 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
     t.string "collection_id", null: false
     t.boolean "confirmed", default: false, null: false
     t.string "email"
-    t.datetime "subscribed_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "subscribed_at", null: false
     t.string "token", null: false
     t.string "user_id"
     t.index ["collection_id"], name: "index_email_subscribers_on_collection_id"
@@ -88,7 +73,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
 
   create_table "oauth_client_states", primary_key: "state", id: :string, force: :cascade do |t|
     t.string "client_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.string "provider", null: false
     t.boolean "used", default: false, null: false
@@ -105,7 +90,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
   end
 
   create_table "password_resets", id: :string, force: :cascade do |t|
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.string "token", null: false
     t.boolean "used", default: false, null: false
     t.string "user_id", null: false
@@ -139,19 +124,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
 
   create_table "remote_follow_requests", primary_key: ["remote_user_id", "collection_id"], force: :cascade do |t|
     t.string "collection_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.string "remote_user_id", null: false
   end
 
   create_table "remote_follows", primary_key: ["remote_user_id", "collection_id"], force: :cascade do |t|
     t.string "collection_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.string "remote_user_id", null: false
   end
 
   create_table "remote_users", id: :string, force: :cascade do |t|
     t.string "actor_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.string "handle"
     t.string "inbox"
     t.string "shared_inbox"
@@ -159,7 +144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
   end
 
   create_table "user_invites", id: :string, force: :cascade do |t|
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.boolean "inactive", default: false, null: false
     t.integer "max_uses"
@@ -180,9 +165,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
   end
 
   add_foreign_key "access_tokens", "users"
-  add_foreign_key "collection_attributes", "collections"
-  add_foreign_key "collection_passwords", "collections"
-  add_foreign_key "collection_redirects", "collections"
   add_foreign_key "collections", "users", column: "owner_id"
   add_foreign_key "email_subscribers", "collections"
   add_foreign_key "email_subscribers", "users"
