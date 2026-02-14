@@ -28,7 +28,10 @@ module Api
     end
 
     def update
-      authorize_resource_owner!(@collection)
+      unless @collection.owner_id == current_user.id || current_user.is_admin?
+        render json: { error: "Forbidden" }, status: :forbidden
+        return
+      end
 
       if @collection.update(collection_params)
         render json: @collection
@@ -52,7 +55,12 @@ module Api
     end
 
     def collection_params
-      params.require(:collection).permit(:alias, :title, :description, :public, :visibility)
+      permitted = params.require(:collection).permit(:alias, :title, :description, :public, :visibility)
+      # Ensure visibility is valid string, or remove it to keep existing value
+      if permitted[:visibility].present? && !Collection::VISIBILITY_OPTIONS.include?(permitted[:visibility])
+        permitted.delete(:visibility)
+      end
+      permitted
     end
   end
 end

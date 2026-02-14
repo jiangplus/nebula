@@ -5,10 +5,10 @@ class HomeController < ApplicationController
   def index
     @page = [params[:page].to_i, 1].max
 
-    # Public posts from public collections, newest first
+    # Public posts from public collections (visibility = 'public'), newest first
     base_scope = Post
       .joins(:collection)
-      .where(collections: { public: true })
+      .where(collections: { visibility: "public" })
       .where("posts.privacy = 0")
       .order(created_at: :desc)
 

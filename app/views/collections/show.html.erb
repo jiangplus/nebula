@@ -24,15 +24,15 @@
       <h3>Visibility</h3>
       <div class="section">
         <label>
-          <input type="radio" name="collection[visibility]" value="0" <%= 'checked' if @collection.visibility == 0 %> />
+          <input type="radio" name="collection[visibility]" value="unlisted" <%= 'checked' if @collection.visibility.blank? || @collection.visibility == "unlisted" %> />
           Unlisted
         </label><br>
         <label>
-          <input type="radio" name="collection[visibility]" value="1" <%= 'checked' if @collection.visibility == 1 %> />
+          <input type="radio" name="collection[visibility]" value="private" <%= 'checked' if @collection.visibility == "private" %> />
           Private
         </label><br>
         <label>
-          <input type="radio" name="collection[visibility]" value="2" <%= 'checked' if @collection.visibility == 2 %> />
+          <input type="radio" name="collection[visibility]" value="public" <%= 'checked' if @collection.visibility == "public" %> />
           Public
         </label>
       </div>
@@ -59,10 +59,12 @@
 document.getElementById('customize-form').addEventListener('submit', function(e) {
   e.preventDefault();
   var form = this;
-  var formData = new FormData(form);
-  var data = {};
-  formData.forEach(function(value, key) {
-    if (key !== '_method') data[key] = value;
+
+  // Get visibility value explicitly from radio buttons
+  var visibility = null;
+  var visibilityRadios = form.querySelectorAll('input[name="collection[visibility]"]');
+  visibilityRadios.forEach(function(radio) {
+    if (radio.checked) visibility = radio.value;
   });
 
   var http = new XMLHttpRequest();
@@ -74,15 +76,21 @@ document.getElementById('customize-form').addEventListener('submit', function(e)
       if (http.status === 200) {
         location.reload();
       } else {
-        alert("Failed to update. Please try again.");
+        var msg = "Failed to update. Please try again.";
+        try {
+          var resp = JSON.parse(http.responseText);
+          if (resp.errors) msg = resp.errors.join(", ");
+          else if (resp.error) msg = resp.error;
+        } catch(e) {}
+        alert(msg);
       }
     }
   };
   http.send(JSON.stringify({
     collection: {
-      title: formData.get('collection[title]'),
-      description: formData.get('collection[description]'),
-      visibility: parseInt(formData.get('collection[visibility]'))
+      title: form.querySelector('input[name="collection[title]"]').value,
+      description: form.querySelector('textarea[name="collection[description]"]').value,
+      visibility: visibility
     }
   }));
 });

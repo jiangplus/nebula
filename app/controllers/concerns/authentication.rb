@@ -34,8 +34,8 @@ module Authentication
   def authorize_resource_owner!(resource)
     unless resource.owner_id == current_user&.id
       respond_to do |format|
-        format.html { redirect_to root_path, alert: "Access denied" }
-        format.json { render json: { error: "Forbidden" }, status: :forbidden }
+        format.html { redirect_to root_path, alert: "Access denied" and return }
+        format.json { render json: { error: "Forbidden" }, status: :forbidden and return }
       end
     end
   end

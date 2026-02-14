@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_14_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,7 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_13_000000) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "view_count", default: 0, null: false
-    t.integer "visibility", default: 0, null: false
+    t.string "visibility", default: "unlisted", null: false
     t.index ["actor_id"], name: "index_collections_on_actor_id", unique: true, where: "(actor_id IS NOT NULL)"
     t.index ["alias"], name: "index_collections_on_alias", unique: true
     t.index ["owner_id"], name: "index_collections_on_owner_id"
