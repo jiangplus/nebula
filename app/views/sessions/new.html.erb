@@ -3,36 +3,74 @@
 <% content_for(:head) do %>
 <meta name="description" content="Log into Nebula.">
 <style>
-input { margin-bottom: 0.5em; }
 p.forgot {
-  font-size: 0.8em;
-  margin: 0 auto 1.5rem;
+  font-size: 0.86em;
+  margin: 0 auto 1rem;
   text-align: left;
-  max-width: 16rem;
 }
 </style>
 <% end %>
 
-<div class="tight content-container">
-  <h1>Log into Nebula</h1>
+<div id="pricing" class="content-container wide-form">
+  <div class="row">
+    <div style="margin: 0 auto;">
+      <h1>Log in</h1>
 
-  <form action="/login" method="post" style="text-align: center; margin-top: 1em;" onsubmit="disableSubmit()">
-    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
-    <input type="text" name="username" placeholder="Username" value="<%= params[:username] %>" <%= 'autofocus' unless params[:username].present? %> /><br />
-    <input type="password" name="password" placeholder="Password" <%= 'autofocus' if params[:username].present? %> /><br />
-    <p class="forgot"><a href="/reset">Forgot password?</a></p>
-    <input type="submit" id="btn-login" value="Login" />
-  </form>
+      <% if flash[:alert].present? %>
+        <ul class="errors">
+          <li class="urgent"><%= flash[:alert] %></li>
+        </ul>
+      <% end %>
 
-  <p style="text-align:center; font-size:0.9em; margin:3em auto; max-width:26em;">
-    <em>No account yet?</em> <a href="/signup">Sign up</a> to start a blog.
-  </p>
+      <div id="billing">
+        <form action="/login" method="POST" id="login-form" onsubmit="return login()">
+          <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+          <dl class="billing">
+            <label>
+              <dt>Username</dt>
+              <dd>
+                <input type="text" id="username" name="username" style="width: 100%; box-sizing: border-box;" value="<%= params[:username] %>" tabindex="1" <%= 'autofocus' unless params[:username].present? %> />
+              </dd>
+            </label>
+            <label>
+              <dt>Password</dt>
+              <dd><input type="password" name="password" id="password" autocomplete="current-password" placeholder="" tabindex="2" style="width: 100%; box-sizing: border-box;" <%= 'autofocus' if params[:username].present? %> /></dd>
+            </label>
+            <dt>
+              <p class="forgot"><a href="/reset">Forgot password?</a></p>
+              <button id="btn-login" type="submit" style="margin-top: 0.5em; padding: 0.5em 1.5em; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">Log in</button>
+            </dt>
+          </dl>
+        </form>
+      </div>
+
+      <p style="text-align: center; font-size: 0.9em; margin-top: 2em;">
+        <em>No account yet?</em> <a href="/signup">Sign up</a> to start a blog.
+      </p>
+    </div>
+  </div>
 
   <script type="text/javascript">
-  function disableSubmit() {
-    var $btn = document.getElementById("btn-login");
-    $btn.value = "Logging in...";
+  function login() {
+    var $user = document.getElementById('username');
+    var $pass = document.getElementById('password');
+
+    if ($user.value == "") {
+      $user.className = 'error';
+      $user.focus();
+      return false;
+    }
+
+    if ($pass.value == "") {
+      $pass.className = 'error';
+      $pass.focus();
+      return false;
+    }
+
+    var $btn = document.getElementById('btn-login');
     $btn.disabled = true;
+    $btn.textContent = 'Logging in...';
+    return true;
   }
   </script>
 </div>

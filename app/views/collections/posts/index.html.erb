@@ -18,7 +18,7 @@
 
 <div id="collection" itemscope itemtype="http://schema.org/WebPage">
   <% if logged_in? && can_edit_collection?(@collection) %>
-    <nav id="manage"><ul>
+    <nav id="manage" style="position: absolute; top: 1em; left: 1.5em;"><ul>
       <li class="has-submenu"><a onclick="void(0)">&#9776; Menu</a>
         <ul>
           <li><a href="/new#<%= @collection.alias %>">New Post</a></li>
@@ -31,7 +31,7 @@
     </ul></nav>
   <% end %>
 
-  <header>
+  <header class="collection-header">
     <h1 id="blog-title">
       <a href="/<%= @collection.alias %>/" class="h-card p-author u-url" rel="me author">
         <%= @collection.title.present? ? @collection.title : @collection.alias %>
@@ -83,21 +83,13 @@
       <% end %>
     </section>
   <% else %>
-    <div id="wrapper">
-      <p>No posts yet.</p>
+    <div class="empty-state">
+      <h2>No posts here yet!</h2>
       <% if logged_in? && can_edit_collection?(@collection) %>
         <p class="text-cta"><a href="/new#<%= @collection.alias %>">Start writing</a></p>
       <% end %>
     </div>
   <% end %>
-
-  <footer>
-    <hr>
-    <nav dir="ltr">
-      <a class="home pubd" href="/">Nebula</a> &middot;
-      powered by <a style="margin-left:0" href="https://writefreely.org">WriteFreely</a>
-    </nav>
-  </footer>
 </div>
 
 <% if logged_in? && can_edit_collection?(@collection) %>

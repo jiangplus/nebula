@@ -26,40 +26,36 @@
 
     <header>
       <h2><a href="/">Nebula</a></h2>
-      <nav id="user-nav">
+      <nav class="tabs">
+        <a href="/"<%= ' class="selected"'.html_safe if request.path == "/" || request.path.start_with?("/read") %>>Home</a>
         <% if logged_in? %>
-          <nav class="dropdown-nav">
-            <ul>
-              <li class="has-submenu">
-                <a><%= current_user.username %></a>
-                <ul>
-                  <% if current_user.is_admin? %>
-                    <li><a href="/admin">Admin dashboard</a></li>
-                  <% end %>
-                  <li><a href="/me">Account settings</a></li>
-                  <li class="separator"><hr></li>
-                  <li><a href="/logout">Log out</a></li>
-                </ul>
-              </li>
-            </ul>
-          </nav>
-        <% end %>
-        <nav class="tabs">
-          <a href="/"<%= ' class="selected"'.html_safe if request.path == "/" || request.path.start_with?("/read") %>>Home</a>
-          <% if logged_in? %>
-            <a href="/me/c"<%= ' class="selected"'.html_safe if request.path.start_with?("/me/c") %>>Blogs</a>
-            <a href="/me/posts"<%= ' class="selected"'.html_safe if request.path == "/me/posts" %>>Drafts</a>
-          <% else %>
-            <a href="/signup"<%= ' class="selected"'.html_safe if request.path == "/signup" %>>Sign up</a>
-            <a href="/login"<%= ' class="selected"'.html_safe if request.path == "/login" %>>Log in</a>
-          <% end %>
-        </nav>
-        <% if logged_in? %>
-          <div class="right-side">
-            <a class="simple-btn" href="/new">New Post</a>
-          </div>
+          <a href="/me/c"<%= ' class="selected"'.html_safe if request.path.start_with?("/me/c") %>>Blogs</a>
+          <a href="/me/posts"<%= ' class="selected"'.html_safe if request.path == "/me/posts" %>>Drafts</a>
+        <% else %>
+          <a href="/signup"<%= ' class="selected"'.html_safe if request.path == "/signup" %>>Sign up</a>
+          <a href="/login"<%= ' class="selected"'.html_safe if request.path == "/login" %>>Log in</a>
         <% end %>
       </nav>
+      <% if logged_in? %>
+        <nav id="user-nav">
+          <ul>
+            <li class="has-submenu">
+              <a><%= current_user.username %> <span style="font-size: 0.7em; color: #999; text-transform: uppercase;">&#9660;</span></a>
+              <ul>
+                <% if current_user.is_admin? %>
+                  <li><a href="/admin">Admin dashboard</a></li>
+                <% end %>
+                <li><a href="/me">Account settings</a></li>
+                <li class="separator"><hr></li>
+                <li><a href="/logout">Log out</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <div class="right-side" style="float: right;">
+          <a class="simple-btn primary" href="/new">New Post</a>
+        </div>
+      <% end %>
     </header>
 
     <div id="official-writing">
