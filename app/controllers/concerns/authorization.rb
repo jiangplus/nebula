@@ -1,6 +1,11 @@
 module Authorization
   extend ActiveSupport::Concern
 
+  included do
+    helper_method :can_access_collection?, :can_edit_collection?, :can_delete_collection?,
+                 :can_access_post?, :can_edit_post?, :can_delete_post? if respond_to?(:helper_method)
+  end
+
   def can_access_collection?(collection)
     return true if collection.public?
     return true if current_user&.id == collection.owner_id
