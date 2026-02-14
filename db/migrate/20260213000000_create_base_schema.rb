@@ -19,7 +19,7 @@ class CreateBaseSchema < ActiveRecord::Migration[8.1]
       t.text :description
       t.string :owner_id, null: false
       t.boolean :public, default: false, null: false
-      t.integer :visibility, default: 0, null: false
+      t.string :visibility, default: "unlisted", null: false
       t.integer :view_count, default: 0, null: false
       t.string :format
       t.text :style_sheet

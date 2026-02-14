@@ -14,7 +14,7 @@ class HomeController < ApplicationController
 
     # Limit to max 5 posts per author using a window function
     limited_posts = Post.from(
-      base_scope.select("posts.*, ROW_NUMBER() OVER (PARTITION BY posts.owner_id ORDER BY posts.created_at DESC) as author_rank")
+      "(#{base_scope.select('posts.*, ROW_NUMBER() OVER (PARTITION BY posts.owner_id ORDER BY posts.created_at DESC) as author_rank').to_sql}) AS posts"
     ).where("author_rank <= ?", MAX_POSTS_PER_AUTHOR)
 
     @total_count = limited_posts.count

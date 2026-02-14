@@ -11,7 +11,11 @@
 
 <div id="post">
   <header>
-    <h1 dir="<%= @post.rtl? ? 'rtl' : 'ltr' %>"><a href="/">Nebula</a></h1>
+    <h1 dir="<%= @post.rtl? ? 'rtl' : 'ltr' %>"><a href="/">Nebula</a>
+      <% if @post.collection %>
+        <span style="font-weight: normal;">/ <a href="/<%= @post.collection.alias %>"><%= @post.collection.alias %></a></span>
+      <% end %>
+    </h1>
     <nav>
       <span class="views" dir="ltr"><strong><%= @post.view_count %></strong> <%= "view".pluralize(@post.view_count) %></span>
       <% if logged_in? && can_edit_post?(@post) %>

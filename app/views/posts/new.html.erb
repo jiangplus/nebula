@@ -268,6 +268,16 @@ if (savedTarget) {
   if (pte) pte.click();
 }
 
+// Check URL hash for collection target on page load
+var urlHash = window.location.hash.substring(1);
+if (urlHash) {
+  var hashTarget = document.querySelector('#target li.target#blog-' + urlHash + ' a');
+  if (hashTarget) {
+    hashTarget.click();
+    localStorage.setItem('postTarget', urlHash);
+  }
+}
+
 // Font picker
 var fonts = document.querySelectorAll('nav#font-picker a.font');
 for (var i = 0; i < fonts.length; i++) {
