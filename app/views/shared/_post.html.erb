@@ -1,0 +1,42 @@
+<article id="post-<%= post.id %>" class="h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <% if post.title.present? %>
+    <h2 class="post-title" itemprop="name" class="p-name">
+      <% if defined?(collection) && collection %>
+        <a href="/<%= collection.alias %>/<%= post.slug %>" itemprop="url" class="u-url"><%= post.title %></a>
+      <% else %>
+        <a href="/d/<%= post.id %>" itemprop="url" class="u-url"><%= post.title %></a>
+      <% end %>
+      <% if defined?(show_actions) && show_actions %>
+        <% if defined?(collection) && collection %>
+          <a class="user hidden action" href="/<%= collection.alias %>/<%= post.slug %>/edit">edit</a>
+        <% else %>
+          <a class="user hidden action" href="/d/<%= post.id %>/edit">edit</a>
+        <% end %>
+        <a class="user hidden delete action" href="#" onclick="delPost(event, '<%= post.id %>')">delete</a>
+      <% end %>
+    </h2>
+    <time class="dt-published" datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+      <%= post.created_at.strftime("%B %-d, %Y") %>
+    </time>
+  <% else %>
+    <h2 class="post-title" itemprop="name">
+      <time class="dt-published" datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+        <% if defined?(collection) && collection %>
+          <a href="/<%= collection.alias %>/<%= post.slug %>" itemprop="url" class="u-url"><%= post.created_at.strftime("%B %-d, %Y") %></a>
+        <% else %>
+          <a href="/d/<%= post.id %>" itemprop="url" class="u-url"><%= post.created_at.strftime("%B %-d, %Y") %></a>
+        <% end %>
+      </time>
+      <% if defined?(show_actions) && show_actions %>
+        <a class="user hidden action" href="/d/<%= post.id %>/edit">edit</a>
+        <a class="user hidden delete action" href="#" onclick="delPost(event, '<%= post.id %>')">delete</a>
+      <% end %>
+    </h2>
+  <% end %>
+
+  <% if post.content.present? %>
+    <div class="e-content" dir="<%= post.rtl? ? 'rtl' : 'ltr' %>">
+      <%= simple_format(truncate(post.content, length: 300)) %>
+    </div>
+  <% end %>
+</article>

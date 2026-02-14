@@ -1,0 +1,163 @@
+<% content_for(:title) { "Nebula Reader" } %>
+
+<% content_for(:head) do %>
+  <link rel="alternate" type="application/rss+xml" title="Nebula Reader" href="/read/feed/">
+  <% if @page > 1 %><link rel="prev" href="/read/page/<%= @page - 1 %>"><% end %>
+  <% if @page < @total_pages %><link rel="next" href="/read/page/<%= @page + 1 %>"><% end %>
+
+  <meta name="description" content="Read the latest posts from Nebula.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Nebula Reader">
+  <meta name="twitter:description" content="Read the latest posts from Nebula.">
+  <meta property="og:title" content="Nebula Reader">
+  <meta property="og:type" content="object">
+  <meta property="og:description" content="Read the latest posts from Nebula.">
+
+  <style>
+    .reader-heading h1 {
+      font-weight: 300;
+      text-align: center;
+      margin: 3em 0 0;
+    }
+    .reader-heading p {
+      text-align: center;
+      margin: 1.5em 0 4.5em;
+      font-size: 1.1em;
+      color: #777;
+    }
+    #reader-wrapper {
+      font-size: 1.2em;
+      max-width: 40em;
+      margin: 0 auto;
+      padding: 0 1em;
+    }
+    #reader-wrapper article {
+      margin-bottom: 2.5em;
+    }
+    #reader-wrapper article .post-title {
+      margin-bottom: 0.25em;
+    }
+    #reader-wrapper article .post-title a {
+      text-decoration: none;
+    }
+    #reader-wrapper article time {
+      color: #999;
+      font-size: 0.86em;
+      display: block;
+    }
+    p.source {
+      font-size: 0.86em;
+      margin-top: 0.25em;
+      margin-bottom: 0;
+    }
+    .preview {
+      max-height: 180px;
+      overflow: hidden;
+      position: relative;
+    }
+    .preview .over {
+      position: absolute;
+      top: 5em;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+    }
+    a.read-more {
+      font-size: 0.86em;
+    }
+    .empty-reader {
+      text-align: center;
+      font-size: 1.1em;
+      margin: 4em 0;
+    }
+    nav#paging {
+      max-width: 40em;
+      margin: 2em auto;
+      overflow: hidden;
+      padding: 0 1em;
+    }
+    nav#paging a {
+      text-decoration: none;
+    }
+  </style>
+<% end %>
+
+<div class="content-container snug reader-heading">
+  <h1>Reader</h1>
+  <p>Read the latest posts from the community.</p>
+</div>
+
+<div id="reader-wrapper">
+  <% if @posts.any? %>
+    <section itemscope itemtype="http://schema.org/Blog">
+      <% @posts.each do |post| %>
+        <article class="<%= post.text_appearance || 'norm' %> h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+          <% if post.title.present? %>
+            <h2 class="post-title" itemprop="name">
+              <a href="/<%= post.collection&.alias %>/<%= post.slug %>" itemprop="url" class="u-url"><%= post.title %></a>
+            </h2>
+            <time class="dt-published" datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+              <%= post.created_at.strftime("%B %-d, %Y") %>
+            </time>
+          <% else %>
+            <h2 class="post-title" itemprop="name">
+              <time class="dt-published" datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+                <a href="/<%= post.collection&.alias %>/<%= post.slug %>" itemprop="url" class="u-url">
+                  <%= post.created_at.strftime("%B %-d, %Y") %>
+                </a>
+              </time>
+            </h2>
+          <% end %>
+
+          <p class="source">
+            <% if post.collection %>
+              from <a href="/<%= post.collection.alias %>"><%= post.collection.title.presence || post.collection.alias %></a>
+            <% else %>
+              <em>Anonymous</em>
+            <% end %>
+          </p>
+
+          <div class="e-content preview" <%= "lang=\"#{post.language}\"" if post.language.present? %> dir="<%= post.try(:rtl) ? 'rtl' : 'auto' %>">
+            <p class="e-content"><%= truncate(post.content.to_s, length: 500, omission: "...") %></p>
+            <div class="over">&nbsp;</div>
+          </div>
+
+          <a class="read-more maybe" href="/<%= post.collection&.alias %>/<%= post.slug %>">Read more...</a>
+        </article>
+      <% end %>
+    </section>
+  <% else %>
+    <div class="empty-reader">
+      <p>No posts here yet!</p>
+    </div>
+  <% end %>
+
+  <% if @total_pages > 1 %>
+    <nav id="paging" class="content-container clearfix">
+      <% if @page < @total_pages %>
+        <a href="/read/page/<%= @page + 1 %>">&#8672; Older</a>
+      <% end %>
+      <% if @page > 1 %>
+        <a style="float:right;" href="/read/page/<%= @page - 1 %>">Newer &#8674;</a>
+      <% end %>
+    </nav>
+  <% end %>
+</div>
+
+<script>
+(function() {
+  var articles = document.querySelectorAll('article');
+  for (var i = 0; i < articles.length; i++) {
+    var art = articles[i];
+    var more = art.querySelector('.read-more.maybe');
+    if (more != null) {
+      if (art.querySelector('.e-content.preview').clientHeight < 180) {
+        more.parentNode.removeChild(more);
+        var overlay = art.querySelector('.over');
+        overlay.parentNode.removeChild(overlay);
+      }
+    }
+  }
+})();
+</script>

@@ -55,10 +55,13 @@ Rails.application.routes.draw do
   end
 
   # User account
-  namespace :me, path: "me", as: :user do
+  scope "/me", as: :user do
     get "/", to: "users/accounts#show", as: :account
-    resources :collections, only: [:index, :show], path: "c"
-    resources :posts, only: [:index]
+    get "settings", to: "users/accounts#show"
+    patch "settings", to: "users/accounts#update"
+    delete "/", to: "users/accounts#destroy"
+    resources :collections, only: [:index, :show], path: "c", controller: "collections"
+    resources :posts, only: [:index], controller: "posts"
   end
 
   # Draft posts
@@ -71,14 +74,16 @@ Rails.application.routes.draw do
   get ":collection_alias/:slug", to: "collections/posts#show", as: :collection_post
 
   # Admin
-  namespace :admin do
+  scope "/admin", as: :admin do
     get "/", to: "admin#dashboard", as: :dashboard
-    get "users", to: "admin#users_index"
+    get "users", to: "admin#users_index", as: :users
     get "users/:id", to: "admin#show_user", as: :show_user
     delete "users/:id", to: "admin#delete_user", as: :delete_user
     patch "users/:id/status", to: "admin#toggle_user_status", as: :toggle_user_status
   end
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # Reader / Homepage (Chorus mode)
+  root "home#index"
+  get "read", to: "home#index", as: :reader
+  get "read/page/:page", to: "home#index", as: :reader_page
 end

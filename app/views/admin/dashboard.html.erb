@@ -1,0 +1,49 @@
+<% content_for(:title) { "Admin — Nebula" } %>
+
+<% content_for(:head) do %>
+<style type="text/css">
+h2 { font-weight: normal; }
+.stats { font-size: 1.2em; margin: 1em 0; display: flex; gap: 2em; }
+.num { font-weight: bold; font-size: 1.5em; }
+nav.admin-tabs { margin-bottom: 2em; }
+nav.admin-tabs a { margin-right: 1em; }
+nav.admin-tabs a.selected { font-weight: bold; }
+</style>
+<% end %>
+
+<div class="content-container snug">
+  <h1>Admin</h1>
+
+  <nav class="admin-tabs">
+    <a href="/admin" class="selected">Dashboard</a>
+    <a href="/admin/users">Users</a>
+  </nav>
+
+  <div class="row stats">
+    <div><span class="num"><%= @users_count %></span> <%= "user".pluralize(@users_count) %></div>
+    <div><span class="num"><%= @collections_count %></span> <%= "blog".pluralize(@collections_count) %></div>
+    <div><span class="num"><%= @posts_count %></span> <%= "post".pluralize(@posts_count) %></div>
+  </div>
+
+  <% if @recent_users.any? %>
+    <h2>Recent Users</h2>
+    <table style="width: 100%;">
+      <thead>
+        <tr>
+          <th style="text-align: left;">Username</th>
+          <th style="text-align: left;">Joined</th>
+          <th style="text-align: left;">Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_users.each do |user| %>
+          <tr>
+            <td><a href="/admin/users/<%= user.id %>"><%= user.username %></a></td>
+            <td><%= user.created_at.strftime("%B %-d, %Y") %></td>
+            <td><%= user.is_admin? ? "Admin" : "User" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

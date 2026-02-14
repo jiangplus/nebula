@@ -1,0 +1,15 @@
+<% content_for(:title) { "Reset Password — Nebula" } %>
+
+<div class="tight content-container">
+  <h1>Reset your password</h1>
+
+  <p>Enter your new password below.</p>
+
+  <form action="/reset/<%= @auth_code.token %>" method="post" style="text-align: center; margin-top: 1em;">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <%= hidden_field_tag :_method, :patch %>
+    <input type="password" name="password" placeholder="New password" style="width: 100%; max-width: 16rem; box-sizing: border-box;" autofocus /><br />
+    <input type="password" name="password_confirmation" placeholder="Confirm new password" style="width: 100%; max-width: 16rem; box-sizing: border-box; margin-top: 0.5em;" /><br />
+    <input type="submit" value="Reset password" style="margin-top: 1em;" />
+  </form>
+</div>

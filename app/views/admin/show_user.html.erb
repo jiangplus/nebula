@@ -1,0 +1,76 @@
+<% content_for(:title) { "#{@user.username} — Admin — Nebula" } %>
+
+<% content_for(:head) do %>
+<style type="text/css">
+nav.admin-tabs { margin-bottom: 2em; }
+nav.admin-tabs a { margin-right: 1em; }
+nav.admin-tabs a.selected { font-weight: bold; }
+.user-detail { margin: 1.5em 0; }
+.user-detail dt { font-weight: bold; font-size: 0.9em; color: #666; margin-bottom: 0.25em; }
+.user-detail dd { margin: 0 0 1em 0; font-size: 1.1em; }
+</style>
+<% end %>
+
+<div class="content-container snug">
+  <h1>Admin</h1>
+
+  <nav class="admin-tabs">
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/users" class="selected">Users</a>
+  </nav>
+
+  <h2><%= @user.username %></h2>
+
+  <dl class="user-detail">
+    <dt>Username</dt>
+    <dd><%= @user.username %></dd>
+
+    <dt>Email</dt>
+    <dd><%= @user.email || "—" %></dd>
+
+    <dt>Joined</dt>
+    <dd><%= @user.created_at.strftime("%B %-d, %Y at %I:%M %p") %></dd>
+
+    <dt>Type</dt>
+    <dd><%= @user.is_admin? ? "Admin" : "User" %></dd>
+
+    <dt>Status</dt>
+    <dd><%= @user.status == 0 ? "Active" : "Silenced" %></dd>
+
+    <dt>Blogs</dt>
+    <dd><%= @user.collections.count %></dd>
+
+    <dt>Posts</dt>
+    <dd><%= @user.posts.count %></dd>
+  </dl>
+
+  <div style="display: flex; gap: 1em; margin-top: 2em;">
+    <form method="post" action="/admin/users/<%= @user.id %>/status" style="display: inline;">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      <%= hidden_field_tag :_method, :patch %>
+      <input type="submit" value="<%= @user.is_admin? ? 'Remove Admin' : 'Make Admin' %>" />
+    </form>
+
+    <% unless @user.id == current_user.id %>
+      <form method="post" action="/admin/users/<%= @user.id %>" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user and all their data?');">
+        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+        <%= hidden_field_tag :_method, :delete %>
+        <input type="submit" value="Delete User" class="danger" />
+      </form>
+    <% end %>
+  </div>
+
+  <% if @user.collections.any? %>
+    <h3 style="margin-top: 2em;">Blogs</h3>
+    <ul>
+      <% @user.collections.each do |collection| %>
+        <li>
+          <a href="/<%= collection.alias %>/">
+            <%= collection.title.present? ? collection.title : collection.alias %>
+          </a>
+          (<%= collection.posts.count %> <%= "post".pluralize(collection.posts.count) %>)
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

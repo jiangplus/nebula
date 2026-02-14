@@ -1,0 +1,38 @@
+<% content_for(:title) { "Log in — Nebula" } %>
+
+<% content_for(:head) do %>
+<meta name="description" content="Log into Nebula.">
+<style>
+input { margin-bottom: 0.5em; }
+p.forgot {
+  font-size: 0.8em;
+  margin: 0 auto 1.5rem;
+  text-align: left;
+  max-width: 16rem;
+}
+</style>
+<% end %>
+
+<div class="tight content-container">
+  <h1>Log into Nebula</h1>
+
+  <form action="/login" method="post" style="text-align: center; margin-top: 1em;" onsubmit="disableSubmit()">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <input type="text" name="username" placeholder="Username" value="<%= params[:username] %>" <%= 'autofocus' unless params[:username].present? %> /><br />
+    <input type="password" name="password" placeholder="Password" <%= 'autofocus' if params[:username].present? %> /><br />
+    <p class="forgot"><a href="/reset">Forgot password?</a></p>
+    <input type="submit" id="btn-login" value="Login" />
+  </form>
+
+  <p style="text-align:center; font-size:0.9em; margin:3em auto; max-width:26em;">
+    <em>No account yet?</em> <a href="/signup">Sign up</a> to start a blog.
+  </p>
+
+  <script type="text/javascript">
+  function disableSubmit() {
+    var $btn = document.getElementById("btn-login");
+    $btn.value = "Logging in...";
+    $btn.disabled = true;
+  }
+  </script>
+</div>

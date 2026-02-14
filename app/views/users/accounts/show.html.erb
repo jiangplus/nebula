@@ -1,0 +1,132 @@
+<% content_for(:title) { "Account — Nebula" } %>
+
+<% content_for(:head) do %>
+<style type="text/css">
+.option { margin: 2em 0em; }
+h2 { margin-top: 2.5em; }
+h3 { font-weight: normal; }
+.section p, .section label { font-size: 0.86em; }
+.modal { position: fixed; }
+</style>
+<% end %>
+
+<div class="content-container snug">
+  <div id="overlay"></div>
+
+  <h1>Account Settings</h1>
+
+  <div>
+    <p>Change your account settings here.</p>
+  </div>
+
+  <form method="post" action="/me/settings" autocomplete="false">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <%= hidden_field_tag :_method, :patch %>
+    <div class="option">
+      <h3>Username</h3>
+      <div class="section">
+        <input type="text" name="user[username]" value="<%= @user.username %>" tabindex="1" />
+      </div>
+    </div>
+
+    <div class="option">
+      <h3>Passphrase</h3>
+      <div class="section">
+        <p>Current passphrase</p>
+        <input type="password" name="current_password" placeholder="Current passphrase" tabindex="2" />
+        <input class="show" type="checkbox" id="show-cur-pass"><label for="show-cur-pass"> Show</label>
+        <p>New passphrase</p>
+        <input type="password" name="user[password]" autocomplete="new-password" placeholder="New passphrase" tabindex="3" />
+        <input class="show" type="checkbox" id="show-new-pass"><label for="show-new-pass"> Show</label>
+      </div>
+    </div>
+
+    <div class="option">
+      <h3>Email</h3>
+      <div class="section">
+        <input type="email" name="user[email]" style="letter-spacing: 1px" placeholder="Email address" value="<%= @user.email %>" size="40" tabindex="4" />
+      </div>
+    </div>
+
+    <div class="option" style="text-align: center;">
+      <input type="submit" value="Save changes" tabindex="5" />
+    </div>
+  </form>
+
+  <% unless current_user.is_admin? %>
+    <h2>Incinerator</h2>
+    <div class="alert danger">
+      <div class="row">
+        <div>
+          <h3>Delete your account</h3>
+          <p>Permanently erase all your data, with no way to recover it.</p>
+        </div>
+        <button class="cta danger" onclick="prepareDeleteUser()">Delete your account...</button>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<div id="modal-delete-user" class="modal" style="display:none;">
+  <h2>Are you sure?</h2>
+  <div class="body">
+    <p style="text-align:left">This action <strong>cannot</strong> be undone. It will immediately and permanently erase your account, including your blogs and posts.</p>
+    <p>If you're sure, please type <strong><%= current_user.username %></strong> to confirm.</p>
+
+    <ul id="delete-errors" class="errors"></ul>
+
+    <form action="/me" method="post" onsubmit="return confirmDeletion()">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      <%= hidden_field_tag :_method, :delete %>
+      <input id="confirm-text" placeholder="<%= current_user.username %>" type="text" class="confirm boxy" name="confirm_username" style="margin-top: 0.5em;" />
+      <div style="text-align:right; margin-top: 1em;">
+        <a id="cancel-delete" style="margin-right:2em" href="#" onclick="closeModal(); return false;">Cancel</a>
+        <input class="danger" type="submit" id="confirm-delete" value="Delete your account" disabled />
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+var showChecks = document.querySelectorAll('input.show');
+for (var i = 0; i < showChecks.length; i++) {
+  showChecks[i].addEventListener('click', function() {
+    var prevEl = this.previousElementSibling;
+    if (prevEl.type == "password") {
+      prevEl.type = "text";
+    } else {
+      prevEl.type = "password";
+    }
+  });
+}
+
+var $confirmDelBtn = document.getElementById('confirm-delete');
+var $confirmText = document.getElementById('confirm-text');
+if ($confirmText) {
+  $confirmText.addEventListener('input', function() {
+    $confirmDelBtn.disabled = this.value !== '<%= current_user.username %>';
+  });
+}
+
+function prepareDeleteUser() {
+  var modal = document.getElementById('modal-delete-user');
+  modal.style.display = 'block';
+  document.getElementById('overlay').style.display = 'block';
+  $confirmText.value = '';
+  $confirmText.focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-delete-user').style.display = 'none';
+  document.getElementById('overlay').style.display = 'none';
+}
+
+function confirmDeletion() {
+  if ($confirmText.value !== '<%= current_user.username %>') {
+    return false;
+  }
+  $confirmDelBtn.disabled = true;
+  $confirmDelBtn.value = 'Deleting...';
+  return true;
+}
+</script>

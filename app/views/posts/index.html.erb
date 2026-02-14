@@ -1,0 +1,109 @@
+<% content_for(:title) { "Drafts — Nebula" } %>
+
+<% content_for(:head) do %>
+<style type="text/css">
+a.loading { font-style: italic; color: #666; }
+</style>
+<% end %>
+
+<div class="snug content-container">
+  <h1 id="posts-header">Drafts</h1>
+
+  <% if @posts.any? %>
+    <p>These are your draft posts. You can share them individually (without a blog) or move them to your blog when you're ready.</p>
+
+    <div id="anon-posts" class="atoms posts">
+      <% @posts.each do |post| %>
+        <div id="post-<%= post.id %>" class="post">
+          <h3>
+            <a href="/d/<%= post.id %>" itemprop="url">
+              <%= post.title.present? ? post.title : post.created_at.strftime("%B %-d, %Y") %>
+            </a>
+          </h3>
+          <h4>
+            <date datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+              <%= post.created_at.strftime("%B %-d, %Y") %>
+            </date>
+            <a class="action" href="/d/<%= post.id %>/edit">edit</a>
+            <a class="delete action" href="#" onclick="delPost(event, '<%= post.id %>')">delete</a>
+            <% if current_user.collections.any? %>
+              <% if current_user.collections.size > 1 %>
+                <div class="action flat-select">
+                  <select id="move-<%= post.id %>" onchange="movePost(this, '<%= post.id %>')" title="Move this post to one of your blogs">
+                    <option style="display:none"></option>
+                    <% current_user.collections.each do |col| %>
+                      <option value="<%= col.alias %>"><%= col.title.present? ? col.title : col.alias %></option>
+                    <% end %>
+                  </select>
+                  <label for="move-<%= post.id %>">move to...</label>
+                </div>
+              <% else %>
+                <% current_user.collections.each do |col| %>
+                  <a class="action" href="#" onclick="movePost(null, '<%= post.id %>', '<%= col.alias %>'); return false;">
+                    move to <%= col.title.present? ? col.title : col.alias %>
+                  </a>
+                <% end %>
+              <% end %>
+            <% end %>
+          </h4>
+          <% if post.content.present? %>
+            <p><%= truncate(post.content, length: 200) %></p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div id="no-posts-published">
+      <p>Your anonymous and draft posts will show up here once you've published some. You'll be able to share them individually (without a blog) or move them to a blog when you're ready.</p>
+      <p>Alternatively, see your blogs and their posts on your <a href="/me/c">Blogs</a> page.</p>
+      <p class="text-cta"><a href="/new">Start writing</a></p>
+    </div>
+  <% end %>
+</div>
+
+<script>
+var deleting = false;
+function delPost(e, id) {
+  e.preventDefault();
+  if (deleting) return;
+  if (window.confirm('Are you sure you want to delete this post?')) {
+    deleting = true;
+    var http = new XMLHttpRequest();
+    http.open("DELETE", "/api/posts/" + id, true);
+    http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+    http.onreadystatechange = function() {
+      if (http.readyState === 4) {
+        deleting = false;
+        if (http.status === 200 || http.status === 204) {
+          var $postEl = document.getElementById('post-' + id);
+          $postEl.parentNode.removeChild($postEl);
+        } else {
+          alert("Failed to delete. Please try again.");
+        }
+      }
+    };
+    http.send();
+  }
+}
+
+function movePost(select, postId, targetAlias) {
+  var alias = targetAlias || select.value;
+  if (!alias) return;
+
+  var http = new XMLHttpRequest();
+  http.open("PATCH", "/api/posts/" + postId, true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+  http.onreadystatechange = function() {
+    if (http.readyState === 4) {
+      if (http.status === 200) {
+        var $postEl = document.getElementById('post-' + postId);
+        $postEl.parentNode.removeChild($postEl);
+      } else {
+        alert("Failed to move post. Please try again.");
+      }
+    }
+  };
+  http.send(JSON.stringify({ post: { collection_id: alias } }));
+}
+</script>

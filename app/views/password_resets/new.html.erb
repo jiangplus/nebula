@@ -1,0 +1,17 @@
+<% content_for(:title) { "Reset Password — Nebula" } %>
+
+<div class="tight content-container">
+  <h1>Forgot your password?</h1>
+
+  <p>Enter your email address and we'll send you a link to reset your password.</p>
+
+  <form action="/reset" method="post" style="text-align: center; margin-top: 1em;">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <input type="email" name="email" placeholder="Email address" style="width: 100%; max-width: 16rem; box-sizing: border-box;" autofocus /><br />
+    <input type="submit" value="Reset password" style="margin-top: 1em;" />
+  </form>
+
+  <p style="text-align:center; font-size:0.9em; margin-top:2em;">
+    <a href="/login">&larr; Back to login</a>
+  </p>
+</div>

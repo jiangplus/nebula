@@ -1,0 +1,44 @@
+<% content_for(:title) do %>
+  <%= @post.title.present? ? @post.title : "Untitled" %> — Nebula
+<% end %>
+
+<% content_for(:head) do %>
+<meta name="description" content="<%= truncate(@post.content || '', length: 160) %>">
+<meta property="og:title" content="<%= @post.title %>">
+<meta property="og:type" content="article">
+<meta property="og:description" content="<%= truncate(@post.content || '', length: 160) %>">
+<% end %>
+
+<div id="post">
+  <header>
+    <h1 dir="<%= @post.rtl? ? 'rtl' : 'ltr' %>"><a href="/">Nebula</a></h1>
+    <nav>
+      <span class="views" dir="ltr"><strong><%= @post.view_count %></strong> <%= "view".pluralize(@post.view_count) %></span>
+      <% if logged_in? && can_edit_post?(@post) %>
+        <a href="/d/<%= @post.id %>/edit" dir="<%= @post.rtl? ? 'rtl' : 'ltr' %>">Edit</a>
+      <% end %>
+      <% if logged_in? %>
+        <a class="xtra-feature dash-nav" href="/me/posts" dir="ltr">Drafts</a>
+      <% end %>
+    </nav>
+  </header>
+
+  <article class="h-entry">
+    <% if @post.title.present? %>
+      <h2 id="title" class="p-name"><%= @post.title %></h2>
+    <% end %>
+    <time class="dt-published" datetime="<%= @post.created_at.iso8601 %>" pubdate>
+      <%= @post.created_at.strftime("%B %-d, %Y") %>
+    </time>
+    <div id="post-body" class="e-content">
+      <%= simple_format(@post.content) %>
+    </div>
+  </article>
+
+  <footer dir="ltr">
+    <hr>
+    <nav>
+      <p style="font-size: 0.9em">Published with <a href="/">Nebula</a>.</p>
+    </nav>
+  </footer>
+</div>

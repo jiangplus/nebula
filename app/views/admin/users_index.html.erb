@@ -1,0 +1,51 @@
+<% content_for(:title) { "Users — Admin — Nebula" } %>
+
+<% content_for(:head) do %>
+<style type="text/css">
+h2 { font-weight: normal; }
+nav.admin-tabs { margin-bottom: 2em; }
+nav.admin-tabs a { margin-right: 1em; }
+nav.admin-tabs a.selected { font-weight: bold; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.5em; text-align: left; border-bottom: 1px solid #eee; }
+th { font-weight: bold; font-size: 0.9em; color: #666; }
+.status-active { color: green; }
+.status-silenced { color: red; font-style: italic; }
+</style>
+<% end %>
+
+<div class="content-container snug">
+  <h1>Admin</h1>
+
+  <nav class="admin-tabs">
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/users" class="selected">Users</a>
+  </nav>
+
+  <h2><%= @users.count %> <%= "user".pluralize(@users.count) %></h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Joined</th>
+        <th>Type</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td><a href="/admin/users/<%= user.id %>"><%= user.username %></a></td>
+          <td><%= user.email %></td>
+          <td><%= user.created_at.strftime("%b %-d, %Y") %></td>
+          <td><%= user.is_admin? ? "Admin" : "User" %></td>
+          <td class="<%= user.status == 0 ? 'status-active' : 'status-silenced' %>">
+            <%= user.status == 0 ? "Active" : "Silenced" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

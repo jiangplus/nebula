@@ -1,0 +1,96 @@
+<% content_for(:title) { "Sign up — Nebula" } %>
+
+<% content_for(:head) do %>
+<style type="text/css">
+h2 { font-weight: normal; }
+#btn-create { color: white !important; }
+#alias-site.demo { color: #999; }
+#alias-site { text-align: left; margin: 0.5em 0; }
+form dd { margin: 0; }
+</style>
+<% end %>
+
+<div id="pricing" class="content-container wide-form">
+  <div class="row">
+    <div style="margin: 0 auto; max-width: 25em;">
+      <h1>Sign up</h1>
+
+      <% if @user&.errors&.any? %>
+        <ul class="errors">
+          <% @user.errors.full_messages.each do |message| %>
+            <li class="urgent"><%= message %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <div id="billing">
+        <form action="/signup" method="POST" id="signup-form" onsubmit="return signup()">
+          <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+          <dl class="billing">
+            <label>
+              <dt>Username</dt>
+              <dd>
+                <input type="text" id="alias" name="user[username]" style="width: 100%; box-sizing: border-box;" tabindex="1" autofocus />
+                <p id="alias-site" class="demo"><strong>your-username</strong></p>
+              </dd>
+            </label>
+            <label>
+              <dt>Password</dt>
+              <dd><input type="password" id="password" name="user[password]" autocomplete="new-password" placeholder="" tabindex="2" style="width: 100%; box-sizing: border-box;" /></dd>
+            </label>
+            <label>
+              <dt>Confirm Password</dt>
+              <dd><input type="password" name="user[password_confirmation]" autocomplete="new-password" placeholder="" tabindex="3" style="width: 100%; box-sizing: border-box;" /></dd>
+            </label>
+            <label>
+              <dt>Email</dt>
+              <dd><input type="email" name="user[email]" id="email" style="letter-spacing: 1px; width: 100%; box-sizing: border-box;" placeholder="me@example.com" tabindex="4" /></dd>
+            </label>
+            <dt>
+              <button id="btn-create" type="submit" style="margin-top: 0.5em; padding: 0.5em 1.5em; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">Create blog</button>
+            </dt>
+          </dl>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+  function signup() {
+    var $pass = document.getElementById('password');
+    var $alias = document.getElementById('alias');
+
+    if ($alias.value == "") {
+      $alias.className = 'error';
+      $alias.focus();
+      $alias.scrollIntoView();
+      return false;
+    }
+
+    if ($pass.value == "") {
+      $pass.className = 'error';
+      $pass.focus();
+      $pass.scrollIntoView();
+      return false;
+    }
+
+    var $btn = document.getElementById('btn-create');
+    $btn.disabled = true;
+    $btn.textContent = 'Creating...';
+    return true;
+  }
+
+  var $alias = document.getElementById('alias');
+  var $aliasSite = document.getElementById('alias-site');
+  $alias.addEventListener('input', function() {
+    var alias = $alias.value;
+    if (alias != "") {
+      $aliasSite.className = '';
+      $aliasSite.innerHTML = '<strong>' + alias + '</strong>';
+    } else {
+      $aliasSite.className = 'demo';
+      $aliasSite.innerHTML = '<strong>your-username</strong>';
+    }
+  });
+  </script>
+</div>

@@ -1,0 +1,89 @@
+<% content_for(:title) { "Blogs — Nebula" } %>
+
+<div class="snug content-container">
+  <h1>Blogs</h1>
+
+  <ul class="atoms collections">
+    <% @collections.each do |collection| %>
+      <li class="collection">
+        <div class="row lineitem">
+          <div>
+            <h3>
+              <a class="title" href="/<%= collection.alias %>/">
+                <%= collection.title.present? ? collection.title : collection.alias %>
+              </a>
+              <span class="electron">
+                <%= collection.public? ? "/#{collection.alias}/" : "private" %>
+              </span>
+            </h3>
+            <nav>
+              <a href="/new#<%= collection.alias %>">New Post</a>
+              <a href="/me/c/<%= collection.id %>">Customize</a>
+            </nav>
+            <% if collection.description.present? %>
+              <p class="description"><%= collection.description %></p>
+            <% end %>
+          </div>
+        </div>
+      </li>
+    <% end %>
+
+    <li id="create-collection" style="display: none;">
+      <form method="POST" action="/api/collections" id="new-collection-form" onsubmit="return createCollection()">
+        <h4>
+          <input type="text" name="title" placeholder="Blog name" id="blog-name">
+          <input type="hidden" name="web" value="true" />
+          <input type="submit" value="Create" id="create-collection-btn">
+        </h4>
+      </form>
+    </li>
+  </ul>
+
+  <p style="margin-top:0"><a id="new-collection" href="#new-collection">New blog</a></p>
+</div>
+
+<script>
+function createCollection() {
+  var input = document.getElementById('blog-name');
+  if (input.value === "") return false;
+
+  var submit = document.getElementById('create-collection-btn');
+  submit.value = "Creating...";
+  submit.disabled = true;
+
+  var http = new XMLHttpRequest();
+  http.open("POST", "/api/collections", true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+  http.onreadystatechange = function() {
+    if (http.readyState === 4) {
+      if (http.status === 201 || http.status === 200) {
+        location.reload();
+      } else {
+        submit.value = "Create";
+        submit.disabled = false;
+        var data = JSON.parse(http.responseText);
+        alert(data.error || data.errors?.join(", ") || "Failed to create blog.");
+      }
+    }
+  };
+  http.send(JSON.stringify({ collection: { title: input.value, alias: input.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') } }));
+  return false;
+}
+
+(function() {
+  var $newBtn = document.getElementById('new-collection');
+  $newBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var collForm = document.getElementById('create-collection');
+    if (collForm.style.display === '' || collForm.style.display === 'none') {
+      this.textContent = "Cancel";
+      collForm.style.display = 'list-item';
+      collForm.querySelector('input[type=text]').focus();
+    } else {
+      this.textContent = "New blog";
+      collForm.style.display = 'none';
+    }
+  });
+}());
+</script>

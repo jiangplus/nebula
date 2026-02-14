@@ -1,0 +1,297 @@
+<% content_for(:title) { "New Post — Nebula" } %>
+
+<% content_for(:head) do %>
+<meta name="google" value="notranslate">
+<style>
+#pad { padding: 0; }
+#writer {
+  width: 100%;
+  min-height: 90vh;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 2em;
+  box-sizing: border-box;
+  font-size: 1.2em;
+  line-height: 1.8;
+}
+#writer.norm { font-family: 'Lora', serif; }
+#writer.sans { font-family: 'Open Sans', sans-serif; }
+#writer.wrap { font-family: monospace; }
+header#tools {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 0.5em 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+body.dark header#tools { background: #222; border-bottom-color: #444; }
+body.dark #writer { background: #222; color: #eee; }
+body.light #writer { background: #fff; color: #111; }
+#clip { display: flex; align-items: center; gap: 1em; }
+#belt { display: flex; align-items: center; gap: 0.5em; }
+#belt .tool a { cursor: pointer; padding: 0.25em; }
+#belt .tool a.disabled { opacity: 0.3; pointer-events: none; }
+#wc { font-size: 0.8em; color: #999; }
+nav#target ul { list-style: none; margin: 0; padding: 0; }
+nav#target li { position: relative; }
+nav#target .has-submenu > ul {
+  display: none; position: absolute; top: 100%; left: 0;
+  background: #fff; border: 1px solid #ddd; min-width: 200px; z-index: 20;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+body.dark nav#target .has-submenu > ul { background: #333; border-color: #555; }
+nav#target .has-submenu:hover > ul { display: block; }
+nav#target .has-submenu > ul li { padding: 0; }
+nav#target .has-submenu > ul li a { display: block; padding: 0.5em 0.75em; text-decoration: none; }
+nav#target .has-submenu > ul li a:hover { background: #f0f0f0; }
+body.dark nav#target .has-submenu > ul li a:hover { background: #444; }
+nav#target .menu-heading { padding: 0.5em 0.75em; font-weight: bold; font-size: 0.85em; color: #999; }
+nav#target .separator hr { margin: 0.25em 0; border: none; border-top: 1px solid #eee; }
+nav#font-picker ul { list-style: none; margin: 0; padding: 0; }
+nav#font-picker .has-submenu > ul {
+  display: none; position: absolute; top: 100%; left: 0;
+  background: #fff; border: 1px solid #ddd; min-width: 120px; z-index: 20;
+}
+nav#font-picker .has-submenu:hover > ul { display: block; }
+nav#font-picker li { position: relative; }
+nav#font-picker li a { display: block; padding: 0.25em 0.75em; text-decoration: none; }
+nav#font-picker li.selected a { font-weight: bold; }
+.font.norm { font-family: serif; }
+.font.sans { font-family: sans-serif; }
+.font.wrap { font-family: monospace; }
+</style>
+<% end %>
+
+<textarea dir="auto" id="writer" placeholder="Write..." class="norm" autofocus style="margin-top: 3em;"></textarea>
+
+<header id="tools">
+  <div id="clip">
+    <h1 style="margin:0; font-size:1em;"><a href="/me/c/" title="View blogs">Nebula</a></h1>
+    <nav id="target"><ul>
+      <li class="has-submenu">
+        <a href="#" id="publish-to" onclick="return false"><span id="target-name">Draft</span> &#9662;</a>
+        <ul>
+          <li class="menu-heading">Publish to...</li>
+          <% if logged_in? && current_user.collections.any? %>
+            <% current_user.collections.each_with_index do |blog, idx| %>
+              <li class="target<%= ' selected' if idx == 0 %>" id="blog-<%= blog.alias %>">
+                <a href="#<%= blog.alias %>"><%= blog.title.present? ? blog.title : blog.alias %></a>
+              </li>
+            <% end %>
+          <% end %>
+          <li class="target" id="blog-anonymous"><a href="#anonymous"><em>Draft</em></a></li>
+          <li class="separator"><hr></li>
+          <li><a href="/me/c/">View Blogs</a></li>
+          <li><a href="/me/posts">View Drafts</a></li>
+          <li><a href="/logout">Log out</a></li>
+        </ul>
+      </li>
+    </ul></nav>
+    <nav id="font-picker"><ul>
+      <li class="has-submenu">
+        <a href="#" onclick="return false">Font &#9662;</a>
+        <ul style="text-align: center">
+          <li class="menu-heading">Font</li>
+          <li class="selected"><a class="font norm" href="#norm">Serif</a></li>
+          <li><a class="font sans" href="#sans">Sans-serif</a></li>
+          <li><a class="font wrap" href="#wrap">Monospace</a></li>
+        </ul>
+      </li>
+    </ul></nav>
+    <span id="wc">0 words</span>
+  </div>
+  <div id="belt">
+    <div class="tool"><a href="#theme" title="Toggle theme" id="toggle-theme">&#9681;</a></div>
+    <div class="tool"><a href="/me/posts" title="View posts" id="view-posts">&#9776;</a></div>
+    <div class="tool"><a href="#publish" title="Publish" id="publish" class="disabled">&#10148;</a></div>
+  </div>
+</header>
+
+<script>
+var $writer = document.getElementById('writer');
+var $btnPublish = document.getElementById('publish');
+var $wc = document.getElementById('wc');
+var selectedFont = 'norm';
+var publishing = false;
+var postTarget = 'anonymous';
+
+// Theme toggle
+if (localStorage.getItem('padTheme') === 'dark' || (!localStorage.getItem('padTheme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.body.classList.add('dark');
+  document.body.classList.remove('light');
+} else {
+  document.body.classList.add('light');
+  document.body.classList.remove('dark');
+}
+
+document.getElementById('toggle-theme').addEventListener('click', function(e) {
+  e.preventDefault();
+  if (document.body.classList.contains('light')) {
+    document.body.classList.remove('light');
+    document.body.classList.add('dark');
+    localStorage.setItem('padTheme', 'dark');
+  } else {
+    document.body.classList.remove('dark');
+    document.body.classList.add('light');
+    localStorage.setItem('padTheme', 'light');
+  }
+});
+
+// Word count
+function updateWordCount() {
+  var words = 0;
+  var val = $writer.value.trim();
+  if (val !== '') {
+    words = val.replace(/\s+/gi, ' ').split(' ').length;
+  }
+  $wc.innerText = words + " word" + (words !== 1 ? "s" : "");
+}
+
+// Button state
+function setButtonStates() {
+  if ($writer.value.length === 0) {
+    $btnPublish.className = 'disabled';
+  } else {
+    $btnPublish.className = '';
+  }
+}
+
+// Autosave
+var lastDoc = localStorage.getItem('lastDoc');
+if (lastDoc) {
+  $writer.value = lastDoc;
+  updateWordCount();
+  setButtonStates();
+}
+
+var typingTimer;
+$writer.addEventListener('keyup', function() {
+  setButtonStates();
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(function() {
+    localStorage.setItem('lastDoc', $writer.value);
+    updateWordCount();
+  }, 200);
+});
+
+$writer.addEventListener('keydown', function(e) {
+  if (e.keyCode === 13 && (e.metaKey || e.ctrlKey)) {
+    $btnPublish.click();
+  }
+});
+
+// Title parsing
+function getTitleAndBody(content) {
+  var eol = content.indexOf("\n");
+  var title = "";
+  var body = content;
+  if (content.indexOf("# ") === 0) {
+    if (eol > -1) {
+      title = content.substring(2, eol);
+      body = content.substring(eol + 1).trim();
+    } else {
+      title = content.substring(2);
+      body = "";
+    }
+  }
+  return { title: title, body: body };
+}
+
+// Publish
+$btnPublish.addEventListener('click', function(e) {
+  e.preventDefault();
+  if (publishing || !$writer.value) return;
+
+  publishing = true;
+  $btnPublish.textContent = '...';
+
+  var content = $writer.value;
+  var post = getTitleAndBody(content);
+  var params = { post: { content: post.body, title: post.title } };
+
+  var url = '/api/posts';
+  if (postTarget !== 'anonymous') {
+    url = '/api/collections/' + postTarget + '/posts';
+  }
+
+  var http = new XMLHttpRequest();
+  http.open("POST", url, true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+  http.onreadystatechange = function() {
+    if (http.readyState === 4) {
+      publishing = false;
+      if (http.status === 200 || http.status === 201) {
+        var data = JSON.parse(http.responseText);
+        localStorage.setItem('lastDoc', '');
+        if (postTarget !== 'anonymous' && data.slug) {
+          window.location = '/' + postTarget + '/' + data.slug;
+        } else {
+          window.location = '/d/' + data.id;
+        }
+      } else {
+        $btnPublish.textContent = '▶';
+        alert("Failed to post. Please try again.");
+      }
+    }
+  };
+  http.send(JSON.stringify(params));
+});
+
+// Target selection
+var targets = document.querySelectorAll('#target li.target a');
+for (var i = 0; i < targets.length; i++) {
+  targets[i].addEventListener('click', function(e) {
+    e.preventDefault();
+    var targetName = this.href.substring(this.href.indexOf('#') + 1);
+    postTarget = targetName;
+    localStorage.setItem('postTarget', targetName);
+
+    var selected = document.querySelector('#target li.target.selected');
+    if (selected) selected.classList.remove('selected');
+    this.parentElement.classList.add('selected');
+    document.getElementById('target-name').innerText = this.innerText.trim();
+  });
+}
+
+// Restore saved target
+var savedTarget = localStorage.getItem('postTarget');
+if (savedTarget) {
+  var pte = document.querySelector('#target li.target#blog-' + savedTarget + ' a');
+  if (pte) pte.click();
+}
+
+// Font picker
+var fonts = document.querySelectorAll('nav#font-picker a.font');
+for (var i = 0; i < fonts.length; i++) {
+  fonts[i].addEventListener('click', function(e) {
+    e.preventDefault();
+    selectedFont = this.href.substring(this.href.indexOf('#') + 1);
+    $writer.className = selectedFont;
+    document.querySelector('nav#font-picker li.selected').classList.remove('selected');
+    this.parentElement.classList.add('selected');
+    localStorage.setItem('padFont', selectedFont);
+  });
+}
+var savedFont = localStorage.getItem('padFont');
+if (savedFont) {
+  var sfe = document.querySelector('nav#font-picker a.font.' + savedFont);
+  if (sfe) sfe.click();
+}
+
+updateWordCount();
+setButtonStates();
+
+window.addEventListener('beforeunload', function() {
+  if ($writer.value) {
+    localStorage.setItem('lastDoc', $writer.value);
+  }
+});
+</script>

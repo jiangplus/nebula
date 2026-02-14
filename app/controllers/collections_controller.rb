@@ -111,7 +111,8 @@ class CollectionsController < ApplicationController
   private
 
   def set_collection
-    @collection = Collection.find_by(alias: params[:alias] || params[:id])
+    identifier = params[:alias] || params[:id]
+    @collection = Collection.find_by(alias: identifier) || Collection.find_by(id: identifier)
     redirect_to root_path, alert: "Collection not found" if @collection.nil?
   end
 

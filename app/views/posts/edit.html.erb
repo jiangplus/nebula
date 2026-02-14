@@ -1,0 +1,218 @@
+<% content_for(:title) do %>
+  Editing <%= @post.title.present? ? @post.title : @post.id %> — Nebula
+<% end %>
+
+<% content_for(:head) do %>
+<meta name="google" value="notranslate">
+<style>
+#writer {
+  width: 100%;
+  min-height: 90vh;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 2em;
+  box-sizing: border-box;
+  font-size: 1.2em;
+  line-height: 1.8;
+}
+#writer.norm { font-family: 'Lora', serif; }
+#writer.sans { font-family: 'Open Sans', sans-serif; }
+#writer.wrap { font-family: monospace; }
+header#tools {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 0.5em 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+body.dark header#tools { background: #222; border-bottom-color: #444; }
+body.dark #writer { background: #222; color: #eee; }
+body.light #writer { background: #fff; color: #111; }
+#clip { display: flex; align-items: center; gap: 1em; }
+#belt { display: flex; align-items: center; gap: 0.5em; }
+#belt .tool a { cursor: pointer; padding: 0.25em; }
+#belt .tool a.disabled { opacity: 0.3; pointer-events: none; }
+#wc { font-size: 0.8em; color: #999; }
+nav#font-picker ul { list-style: none; margin: 0; padding: 0; }
+nav#font-picker .has-submenu > ul {
+  display: none; position: absolute; top: 100%; left: 0;
+  background: #fff; border: 1px solid #ddd; min-width: 120px; z-index: 20;
+}
+nav#font-picker .has-submenu:hover > ul { display: block; }
+nav#font-picker li { position: relative; }
+nav#font-picker li a { display: block; padding: 0.25em 0.75em; text-decoration: none; }
+nav#font-picker li.selected a { font-weight: bold; }
+.font.norm { font-family: serif; }
+.font.sans { font-family: sans-serif; }
+.font.wrap { font-family: monospace; }
+</style>
+<% end %>
+
+<textarea dir="auto" id="writer" placeholder="Write..." class="<%= @post.text_appearance || 'norm' %>" autofocus style="margin-top: 3em;"><%= "# #{@post.title}\n\n" if @post.title.present? %><%= @post.content %></textarea>
+
+<header id="tools">
+  <div id="clip">
+    <h1 style="margin:0; font-size:1em;">
+      <% if @post.collection %>
+        <a href="/<%= @post.collection.alias %>"><%= @post.collection.title.present? ? @post.collection.title : @post.collection.alias %></a>
+      <% else %>
+        <a href="/me/posts">Draft</a>
+      <% end %>
+    </h1>
+    <nav id="font-picker"><ul>
+      <li class="has-submenu">
+        <a href="#" onclick="return false">Font &#9662;</a>
+        <ul style="text-align: center">
+          <li class="menu-heading">Font</li>
+          <li class="<%= 'selected' if @post.text_appearance == 'norm' || @post.text_appearance.blank? %>"><a class="font norm" href="#norm">Serif</a></li>
+          <li class="<%= 'selected' if @post.text_appearance == 'sans' %>"><a class="font sans" href="#sans">Sans-serif</a></li>
+          <li class="<%= 'selected' if @post.text_appearance == 'wrap' %>"><a class="font wrap" href="#wrap">Monospace</a></li>
+        </ul>
+      </li>
+    </ul></nav>
+    <span id="wc">0 words</span>
+  </div>
+  <div id="belt">
+    <div class="tool"><a href="#theme" title="Toggle theme" id="toggle-theme">&#9681;</a></div>
+    <div class="tool"><a href="/me/posts" title="View posts">&#9776;</a></div>
+    <div class="tool"><a href="#publish" title="Update" id="publish">&#10148;</a></div>
+  </div>
+</header>
+
+<script>
+var $writer = document.getElementById('writer');
+var $btnPublish = document.getElementById('publish');
+var $wc = document.getElementById('wc');
+var selectedFont = '<%= @post.text_appearance || "norm" %>';
+var publishing = false;
+var origDoc = $writer.value;
+
+// Theme
+if (localStorage.getItem('padTheme') === 'dark' || (!localStorage.getItem('padTheme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.body.classList.add('dark');
+} else {
+  document.body.classList.add('light');
+}
+
+document.getElementById('toggle-theme').addEventListener('click', function(e) {
+  e.preventDefault();
+  document.body.classList.toggle('dark');
+  document.body.classList.toggle('light');
+  localStorage.setItem('padTheme', document.body.classList.contains('dark') ? 'dark' : 'light');
+});
+
+// Word count
+function updateWordCount() {
+  var val = $writer.value.trim();
+  var words = val === '' ? 0 : val.replace(/\s+/gi, ' ').split(' ').length;
+  $wc.innerText = words + " word" + (words !== 1 ? "s" : "");
+}
+
+function setButtonStates() {
+  $btnPublish.className = ($writer.value === origDoc) ? 'disabled' : '';
+}
+
+function getTitleAndBody(content) {
+  var eol = content.indexOf("\n");
+  var title = "";
+  var body = content;
+  if (content.indexOf("# ") === 0) {
+    if (eol > -1) {
+      title = content.substring(2, eol);
+      body = content.substring(eol + 1).trim();
+    } else {
+      title = content.substring(2);
+      body = "";
+    }
+  }
+  return { title: title, body: body };
+}
+
+$writer.addEventListener('keyup', function() {
+  setButtonStates();
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(function() {
+    localStorage.setItem('draft<%= @post.id %>', $writer.value);
+    updateWordCount();
+  }, 200);
+});
+
+$writer.addEventListener('keydown', function(e) {
+  if (e.keyCode === 13 && (e.metaKey || e.ctrlKey)) {
+    $btnPublish.click();
+  }
+});
+
+var typingTimer;
+
+$btnPublish.addEventListener('click', function(e) {
+  e.preventDefault();
+  if (publishing || $writer.value === origDoc) return;
+
+  publishing = true;
+  $btnPublish.textContent = '...';
+
+  var content = $writer.value;
+  var post = getTitleAndBody(content);
+
+  <% if @post.collection %>
+  var url = "/api/collections/<%= @post.collection.alias %>/posts/<%= @post.id %>";
+  <% else %>
+  var url = "/api/posts/<%= @post.id %>";
+  <% end %>
+
+  var http = new XMLHttpRequest();
+  http.open("PATCH", url, true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+  http.onreadystatechange = function() {
+    if (http.readyState === 4) {
+      publishing = false;
+      if (http.status === 200) {
+        localStorage.removeItem('draft<%= @post.id %>');
+        origDoc = $writer.value;
+        <% if @post.collection %>
+        var data = JSON.parse(http.responseText);
+        window.location = '/<%= @post.collection.alias %>/' + (data.slug || '<%= @post.slug %>');
+        <% else %>
+        window.location = '/d/<%= @post.id %>';
+        <% end %>
+      } else {
+        $btnPublish.textContent = '▶';
+        alert("Failed to update. Please try again.");
+      }
+    }
+  };
+  http.send(JSON.stringify({ post: { content: post.body, title: post.title, font: selectedFont } }));
+});
+
+// Font picker
+var fonts = document.querySelectorAll('nav#font-picker a.font');
+for (var i = 0; i < fonts.length; i++) {
+  fonts[i].addEventListener('click', function(e) {
+    e.preventDefault();
+    selectedFont = this.href.substring(this.href.indexOf('#') + 1);
+    $writer.className = selectedFont;
+    document.querySelector('nav#font-picker li.selected').classList.remove('selected');
+    this.parentElement.classList.add('selected');
+    localStorage.setItem('draft<%= @post.id %>font', selectedFont);
+  });
+}
+
+// Load draft from localStorage
+var savedDraft = localStorage.getItem('draft<%= @post.id %>');
+if (savedDraft && savedDraft !== origDoc) {
+  // Draft exists that differs from saved version
+  $writer.value = savedDraft;
+}
+
+updateWordCount();
+setButtonStates();
+</script>

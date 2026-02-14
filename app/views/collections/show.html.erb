@@ -1,0 +1,105 @@
+<% content_for(:title) { "#{@collection.title || @collection.alias} — Nebula" } %>
+
+<div class="snug content-container">
+  <h1>Customize "<%= @collection.title.present? ? @collection.title : @collection.alias %>"</h1>
+
+  <form method="post" action="/api/collections/<%= @collection.alias %>" id="customize-form">
+    <input type="hidden" name="_method" value="patch">
+
+    <div class="option">
+      <h3>Title</h3>
+      <div class="section">
+        <input type="text" name="collection[title]" value="<%= @collection.title %>" style="width: 100%; box-sizing: border-box;" />
+      </div>
+    </div>
+
+    <div class="option">
+      <h3>Description</h3>
+      <div class="section">
+        <textarea name="collection[description]" style="width: 100%; box-sizing: border-box; min-height: 4em;"><%= @collection.description %></textarea>
+      </div>
+    </div>
+
+    <div class="option">
+      <h3>Visibility</h3>
+      <div class="section">
+        <label>
+          <input type="radio" name="collection[visibility]" value="0" <%= 'checked' if @collection.visibility == 0 %> />
+          Unlisted
+        </label><br>
+        <label>
+          <input type="radio" name="collection[visibility]" value="1" <%= 'checked' if @collection.visibility == 1 %> />
+          Private
+        </label><br>
+        <label>
+          <input type="radio" name="collection[visibility]" value="2" <%= 'checked' if @collection.visibility == 2 %> />
+          Public
+        </label>
+      </div>
+    </div>
+
+    <div class="option" style="text-align: center;">
+      <input type="submit" value="Save changes" />
+    </div>
+  </form>
+
+  <h2>Danger Zone</h2>
+  <div class="alert danger">
+    <div class="row">
+      <div>
+        <h3>Delete this blog</h3>
+        <p>Permanently delete "<%= @collection.title.present? ? @collection.title : @collection.alias %>" and all its posts.</p>
+      </div>
+      <button class="cta danger" onclick="if(confirm('Are you sure you want to delete this blog and all its posts?')) { deleteCollection(); }">Delete blog</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('customize-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  var formData = new FormData(form);
+  var data = {};
+  formData.forEach(function(value, key) {
+    if (key !== '_method') data[key] = value;
+  });
+
+  var http = new XMLHttpRequest();
+  http.open("PATCH", "/api/collections/<%= @collection.alias %>", true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+  http.onreadystatechange = function() {
+    if (http.readyState === 4) {
+      if (http.status === 200) {
+        location.reload();
+      } else {
+        alert("Failed to update. Please try again.");
+      }
+    }
+  };
+  http.send(JSON.stringify({
+    collection: {
+      title: formData.get('collection[title]'),
+      description: formData.get('collection[description]'),
+      visibility: parseInt(formData.get('collection[visibility]'))
+    }
+  }));
+});
+
+function deleteCollection() {
+  var http = new XMLHttpRequest();
+  http.open("DELETE", "/api/collections/<%= @collection.alias %>", true);
+  http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+  http.onreadystatechange = function() {
+    if (http.readyState === 4) {
+      if (http.status === 200) {
+        window.location = '/me/c';
+      } else {
+        alert("Failed to delete. Please try again.");
+      }
+    }
+  };
+  http.send();
+}
+</script>

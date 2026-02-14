@@ -2,28 +2,71 @@
 <html>
   <head>
     <title><%= content_for(:title) || "Nebula" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Nebula">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta property="og:site_name" content="Nebula">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
   <body>
-    <%= yield %>
+    <div id="overlay"></div>
+
+    <header>
+      <h2><a href="/">Nebula</a></h2>
+      <nav id="user-nav">
+        <% if logged_in? %>
+          <nav class="dropdown-nav">
+            <ul>
+              <li class="has-submenu">
+                <a><%= current_user.username %></a>
+                <ul>
+                  <% if current_user.is_admin? %>
+                    <li><a href="/admin">Admin dashboard</a></li>
+                  <% end %>
+                  <li><a href="/me">Account settings</a></li>
+                  <li class="separator"><hr></li>
+                  <li><a href="/logout">Log out</a></li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        <% end %>
+        <nav class="tabs">
+          <a href="/"<%= ' class="selected"'.html_safe if request.path == "/" || request.path.start_with?("/read") %>>Home</a>
+          <% if logged_in? %>
+            <a href="/me/c"<%= ' class="selected"'.html_safe if request.path.start_with?("/me/c") %>>Blogs</a>
+            <a href="/me/posts"<%= ' class="selected"'.html_safe if request.path == "/me/posts" %>>Drafts</a>
+          <% else %>
+            <a href="/signup"<%= ' class="selected"'.html_safe if request.path == "/signup" %>>Sign up</a>
+            <a href="/login"<%= ' class="selected"'.html_safe if request.path == "/login" %>>Log in</a>
+          <% end %>
+        </nav>
+        <% if logged_in? %>
+          <div class="right-side">
+            <a class="simple-btn" href="/new">New Post</a>
+          </div>
+        <% end %>
+      </nav>
+    </header>
+
+    <div id="official-writing">
+      <%= render "shared/flash" %>
+      <%= yield %>
+    </div>
+
+    <%= render "shared/footer" %>
   </body>
 </html>

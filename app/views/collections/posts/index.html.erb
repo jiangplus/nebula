@@ -1,0 +1,129 @@
+<% content_for(:title) do %>
+  <%= @collection.title.present? ? @collection.title : @collection.alias %> — Nebula
+<% end %>
+
+<% content_for(:head) do %>
+<link rel="canonical" href="/<%= @collection.alias %>">
+<meta name="description" content="<%= @collection.description %>">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="<%= @collection.title.present? ? @collection.title : @collection.alias %>">
+<meta name="twitter:description" content="<%= @collection.description %>">
+<meta property="og:title" content="<%= @collection.title.present? ? @collection.title : @collection.alias %>">
+<meta property="og:type" content="article">
+<meta property="og:description" content="<%= @collection.description %>">
+<% if @collection.style_sheet.present? %>
+<style type="text/css"><%= @collection.style_sheet %></style>
+<% end %>
+<% end %>
+
+<div id="collection" itemscope itemtype="http://schema.org/WebPage">
+  <% if logged_in? && can_edit_collection?(@collection) %>
+    <nav id="manage"><ul>
+      <li class="has-submenu"><a onclick="void(0)">&#9776; Menu</a>
+        <ul>
+          <li><a href="/new#<%= @collection.alias %>">New Post</a></li>
+          <li><a href="/me/c/<%= @collection.id %>">Customize</a></li>
+          <li class="separator"><hr></li>
+          <li><a href="/me/c/">View Blogs</a></li>
+          <li><a href="/me/posts">View Drafts</a></li>
+        </ul>
+      </li>
+    </ul></nav>
+  <% end %>
+
+  <header>
+    <h1 id="blog-title">
+      <a href="/<%= @collection.alias %>/" class="h-card p-author u-url" rel="me author">
+        <%= @collection.title.present? ? @collection.title : @collection.alias %>
+      </a>
+    </h1>
+    <% if @collection.description.present? %>
+      <p class="description p-note"><%= @collection.description %></p>
+    <% end %>
+  </header>
+
+  <% if @posts.any? %>
+    <section id="wrapper" itemscope itemtype="http://schema.org/Blog">
+      <% @posts.each do |post| %>
+        <article id="post-<%= post.id %>" class="h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+          <% if post.title.present? %>
+            <h2 class="post-title" itemprop="name" class="p-name">
+              <a href="/<%= @collection.alias %>/<%= post.slug %>" itemprop="url" class="u-url"><%= post.title %></a>
+              <% if logged_in? && can_edit_post?(post) %>
+                <a class="user hidden action" href="/<%= @collection.alias %>/<%= post.slug %>/edit">edit</a>
+                <a class="user hidden delete action" href="#" onclick="delPost(event, '<%= post.id %>')">delete</a>
+              <% end %>
+            </h2>
+            <time class="dt-published" datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+              <%= post.created_at.strftime("%B %-d, %Y") %>
+            </time>
+          <% else %>
+            <h2 class="post-title" itemprop="name">
+              <time class="dt-published" datetime="<%= post.created_at.iso8601 %>" pubdate itemprop="datePublished">
+                <a href="/<%= @collection.alias %>/<%= post.slug %>" itemprop="url" class="u-url">
+                  <%= post.created_at.strftime("%B %-d, %Y") %>
+                </a>
+              </time>
+              <% if logged_in? && can_edit_post?(post) %>
+                <a class="user hidden action" href="/<%= @collection.alias %>/<%= post.slug %>/edit">edit</a>
+                <a class="user hidden delete action" href="#" onclick="delPost(event, '<%= post.id %>')">delete</a>
+              <% end %>
+            </h2>
+          <% end %>
+
+          <% if post.content.present? %>
+            <div class="e-content">
+              <%= simple_format(truncate(post.content, length: 500)) %>
+            </div>
+            <% if post.content.length > 500 %>
+              <a class="read-more" href="/<%= @collection.alias %>/<%= post.slug %>">Read more...</a>
+            <% end %>
+          <% end %>
+        </article>
+      <% end %>
+    </section>
+  <% else %>
+    <div id="wrapper">
+      <p>No posts yet.</p>
+      <% if logged_in? && can_edit_collection?(@collection) %>
+        <p class="text-cta"><a href="/new#<%= @collection.alias %>">Start writing</a></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <footer>
+    <hr>
+    <nav dir="ltr">
+      <a class="home pubd" href="/">Nebula</a> &middot;
+      powered by <a style="margin-left:0" href="https://writefreely.org">WriteFreely</a>
+    </nav>
+  </footer>
+</div>
+
+<% if logged_in? && can_edit_collection?(@collection) %>
+<script>
+var deleting = false;
+function delPost(e, id) {
+  e.preventDefault();
+  if (deleting) return;
+  if (window.confirm('Are you sure you want to delete this post?')) {
+    deleting = true;
+    var http = new XMLHttpRequest();
+    http.open("DELETE", "/api/posts/" + id, true);
+    http.setRequestHeader("X-CSRF-Token", document.querySelector('meta[name="csrf-token"]').content);
+    http.onreadystatechange = function() {
+      if (http.readyState === 4) {
+        deleting = false;
+        if (http.status === 200 || http.status === 204) {
+          var $postEl = document.getElementById('post-' + id);
+          $postEl.parentNode.removeChild($postEl);
+        } else {
+          alert("Failed to delete. Please try again.");
+        }
+      }
+    };
+    http.send();
+  }
+}
+</script>
+<% end %>
