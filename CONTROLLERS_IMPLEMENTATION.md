@@ -1,4 +1,4 @@
-# WriteFreely Controllers Implementation Summary
+# Controllers Implementation Summary
 
 This document summarizes the complete implementation of the WriteFreely-inspired controller architecture for the Nebula Rails 8.1 project.
 
