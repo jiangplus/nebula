@@ -163,6 +163,9 @@ function setButtonStates() {
   }
 }
 
+// Clear previous draft content when starting a new post
+localStorage.removeItem('lastDoc');
+
 // Autosave
 var lastDoc = localStorage.getItem('lastDoc');
 if (lastDoc) {
@@ -230,7 +233,7 @@ $btnPublish.addEventListener('click', function(e) {
       publishing = false;
       if (http.status === 200 || http.status === 201) {
         var data = JSON.parse(http.responseText);
-        localStorage.setItem('lastDoc', '');
+        localStorage.removeItem('lastDoc');
         if (postTarget !== 'anonymous' && data.slug) {
           window.location = '/' + postTarget + '/' + data.slug;
         } else {
