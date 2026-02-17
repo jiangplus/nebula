@@ -10,14 +10,33 @@ class Collection < ApplicationRecord
 
   validates :visibility, inclusion: { in: VISIBILITY_OPTIONS }, if: -> { visibility.present? }
   before_validation :set_default_visibility, on: :create
+  before_create :generate_activitypub_keys
 
   def public?
     visibility == "public"
+  end
+
+  def actor_id
+    # Generate actor_id if not set
+    super || "#{Rails.application.routes.url_helpers.api_collection_url(self.alias)}"
   end
 
   private
 
   def set_default_visibility
     self.visibility = "unlisted" if visibility.blank?
+  end
+
+  def generate_activitypub_keys
+    return if private_key.present? || public_key.present?
+
+    # Generate RSA keypair for ActivityPub signing
+    key = OpenSSL::PKey::RSA.new(2048)
+
+    self.private_key = key.to_pem
+    self.public_key = key.public_key.to_pem
+
+    # Set actor_id based on the collection URL
+    self.actor_id = "#{Rails.application.routes.url_helpers.api_collection_url(self.alias)}"
   end
 end

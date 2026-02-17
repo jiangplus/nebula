@@ -5,6 +5,9 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # WebFinger discovery
+  get ".well-known/webfinger", to: "activity_pub/webfinger#show"
+
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
@@ -49,7 +52,12 @@ Rails.application.routes.draw do
       resource :inbox, only: [:create], controller: "activity_pub/inboxes"
       resource :outbox, only: [:show], controller: "activity_pub/outboxes"
       resource :followers, only: [:show], controller: "activity_pub/followers"
+      resource :following, only: [:show], controller: "activity_pub/following"
+      resource :actor, only: [:show], controller: "activity_pub/actors"
     end
+
+    # ActivityPub object fetch (for individual posts)
+    get "objects/:ap_id", to: "activity_pub/objects#show"
 
     resources :posts, only: [:create, :show, :update, :destroy]
   end
