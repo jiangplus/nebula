@@ -1,4 +1,4 @@
-class OAuthController < ApplicationController
+class OauthController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def authorize
