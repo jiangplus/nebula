@@ -4,6 +4,7 @@ class Post < ApplicationRecord
 
   has_many :jobs, dependent: :destroy
 
+  after_create :set_ap_id
   after_create :federate_creation
   after_update :federate_update
   after_destroy :federate_deletion
@@ -23,6 +24,10 @@ class Post < ApplicationRecord
   end
 
   private
+
+  def set_ap_id
+    update_column(:ap_id, ap_id) if ap_id.present? && self.ap_id.blank?
+  end
 
   def federate_creation
     return unless collection&.present?
