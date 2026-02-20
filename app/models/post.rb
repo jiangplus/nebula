@@ -16,7 +16,7 @@ class Post < ApplicationRecord
     federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
 
     if collection
-      path = slug.present? ? slug : id
+      path = id
       "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, host: federation_host, only_path: false)}/#{path}"
     else
       Rails.application.routes.url_helpers.draft_post_url(self, host: federation_host, only_path: false)
@@ -26,7 +26,16 @@ class Post < ApplicationRecord
   private
 
   def set_ap_id
-    update_column(:ap_id, ap_id) if ap_id.present? && self.ap_id.blank?
+    return if self.ap_id.present?
+
+    federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+    ap_id_value = if collection
+      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, host: federation_host, only_path: false)}/#{id}"
+    else
+      Rails.application.routes.url_helpers.draft_post_url(self, host: federation_host, only_path: false)
+    end
+
+    update_column(:ap_id, ap_id_value)
   end
 
   def federate_creation
