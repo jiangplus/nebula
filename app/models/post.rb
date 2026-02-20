@@ -28,14 +28,7 @@ class Post < ApplicationRecord
   def set_ap_id
     return if self.ap_id.present?
 
-    federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-    ap_id_value = if collection
-      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, host: federation_host, only_path: false)}/#{id}"
-    else
-      Rails.application.routes.url_helpers.draft_post_url(self, host: federation_host, only_path: false)
-    end
-
-    update_column(:ap_id, ap_id_value)
+    update_column(:ap_id, ap_id)
   end
 
   def federate_creation
