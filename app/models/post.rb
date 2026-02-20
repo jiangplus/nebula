@@ -8,15 +8,19 @@ class Post < ApplicationRecord
   after_update :federate_update
   after_destroy :federate_deletion
 
-  # Generate AP ID for the post
+  # Generate AP ID for the post using federation host
   def ap_id
     return super if super.present?
 
+    federation_host = ENV.fetch("FEDERATION_HOST", "localhost")
+    federation_port = ENV.fetch("FEDERATION_PORT", 3000).to_i
+    host_options = { host: federation_host, port: federation_port }
+
     if collection
       path = slug.present? ? slug : id
-      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias)}/#{path}"
+      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, **host_options)}/#{path}"
     else
-      Rails.application.routes.url_helpers.draft_post_url(self)
+      Rails.application.routes.url_helpers.draft_post_url(self, **host_options)
     end
   end
 

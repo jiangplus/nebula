@@ -38,8 +38,8 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   # Set host to be used by links generated in mailer templates and API.
-  host = ENV.fetch("FEDERATION_HOST", "localhost")
-  port = ENV.fetch("FEDERATION_PORT", 3000).to_i
+  host = ENV.fetch("HOST", "localhost")
+  port = ENV.fetch("PORT", 3000).to_i
   config.action_mailer.default_url_options = { host: host, port: port }
   config.action_controller.default_url_options = { host: host, port: port }
 
