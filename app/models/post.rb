@@ -10,9 +10,7 @@ class Post < ApplicationRecord
   after_destroy :federate_deletion
 
   # Generate AP ID for the post using federation host
-  def ap_id
-    return super if super.present?
-
+  def generate_ap_id
     federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
 
     if collection
@@ -28,7 +26,7 @@ class Post < ApplicationRecord
   def set_ap_id
     return if self.ap_id.present?
 
-    update_column(:ap_id, ap_id)
+    update_column(:ap_id, generate_ap_id)
   end
 
   def federate_creation
@@ -37,7 +35,7 @@ class Post < ApplicationRecord
     return unless collection.private_key.present?
 
     # Set the AP ID before federating
-    update_column(:ap_id, ap_id) if ap_id.present?
+    update_column(:ap_id, generate_ap_id)
 
     # Federate in background
     ActivityPub::Service.federate_post(collection, self, action: :create)
@@ -50,7 +48,7 @@ class Post < ApplicationRecord
     return unless saved_change_to_content? || saved_change_to_title?
 
     # Ensure AP ID is set
-    update_column(:ap_id, ap_id) if ap_id.present?
+    update_column(:ap_id, generate_ap_id)
 
     ActivityPub::Service.federate_post(collection, self, action: :update)
   end
