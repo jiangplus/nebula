@@ -12,10 +12,16 @@ class Post < ApplicationRecord
   def ap_id
     return super if super.present?
 
+    host_options = { host: Rails.configuration.action_controller.default_url_options[:host], port: Rails.configuration.action_controller.default_url_options[:port] }
+
     if collection
-      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias)}/#{slug}"
+      if slug.present?
+        "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, **host_options)}/#{slug}"
+      else
+        "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, **host_options)}/#{id}"
+      end
     else
-      "#{Rails.application.routes.url_helpers.draft_post_url(self)}"
+      Rails.application.routes.url_helpers.draft_post_url(self, **host_options)
     end
   end
 
