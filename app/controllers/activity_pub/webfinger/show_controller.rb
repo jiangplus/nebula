@@ -7,6 +7,7 @@ module ActivityPub
         resource = params[:resource]
         return head :bad_request if resource.blank?
 
+        federation_host = ActivityPub::Urls.federation_host
         federation_domain = ActivityPub::Urls.federation_domain
 
         # Parse acct:user@host format
@@ -14,8 +15,8 @@ module ActivityPub
           _, account = resource.split(":", 2)
           username, host = account.split("@", 2)
 
-          # Check if this is our host
-          if host == federation_domain
+          # Check if this is our host (match both with and without port)
+          if host == federation_host || host == federation_domain
             collection = Collection.find_by(alias: username)
             if collection
               render json: {
