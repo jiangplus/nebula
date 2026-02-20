@@ -201,24 +201,28 @@ module ActivityPub
 
     # Get the URL for a post
     def self.post_url(collection, post)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
       if post.collection
-        "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias)}/#{post.slug}"
+        "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, host: federation_host, only_path: false)}/#{post.slug}"
       else
-        "#{Rails.application.routes.url_helpers.draft_post_url(post)}"
+        Rails.application.routes.url_helpers.draft_post_url(post, host: federation_host, only_path: false)
       end
     end
 
     # Helper for URL generation
     def self.api_collection_url(alias_)
-      Rails.application.routes.url_helpers.api_collection_url(alias_)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+      Rails.application.routes.url_helpers.api_collection_url(alias_, host: federation_host, only_path: false)
     end
 
     def self.api_collection_outbox_url(alias_)
-      Rails.application.routes.url_helpers.api_collection_outbox_url(alias_)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+      Rails.application.routes.url_helpers.api_collection_outbox_url(alias_, host: federation_host, only_path: false)
     end
 
     def self.api_collection_followers_url(alias_)
-      Rails.application.routes.url_helpers.api_collection_followers_url(alias_)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+      Rails.application.routes.url_helpers.api_collection_followers_url(alias_, host: federation_host, only_path: false)
     end
   end
 end

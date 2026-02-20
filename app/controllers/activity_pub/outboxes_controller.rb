@@ -51,19 +51,34 @@ module ActivityPub
     end
 
     def collection_outbox_url(collection)
-      api_collection_outbox_url(collection_alias: collection.alias)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+      api_collection_outbox_url(collection.alias, host: federation_host, only_path: false)
     end
 
     def post_activity_url(post)
-      "#{api_collection_outbox_url(@collection.alias)}##{post.id}/activity"
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+      "#{api_collection_outbox_url(@collection.alias, host: federation_host, only_path: false)}##{post.id}/activity"
     end
 
     def post_url(post)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
       if post.collection
-        "#{api_collection_url(post.collection.alias)}/#{post.slug}"
+        "#{api_collection_url(post.collection.alias, host: federation_host, only_path: false)}/#{post.slug || post.id}"
       else
-        "#{api_collection_url(post.owner.username)}/d/#{post.id}"
+        "#{api_collection_url(post.owner.username, host: federation_host, only_path: false)}/d/#{post.id}"
       end
+    end
+
+    def api_collection_url(alias_, options = {})
+      Rails.application.routes.url_helpers.api_collection_url(alias_, **options)
+    end
+
+    def api_collection_outbox_url(alias_, options = {})
+      Rails.application.routes.url_helpers.api_collection_outbox_url(alias_, **options)
+    end
+
+    def api_collection_followers_url(alias_, options = {})
+      Rails.application.routes.url_helpers.api_collection_followers_url(alias_, **options)
     end
   end
 end
