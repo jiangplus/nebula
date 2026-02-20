@@ -22,7 +22,12 @@ module ActivityPub
     end
 
     def collection_followers_url(collection)
-      api_collection_followers_url(collection_alias: collection.alias)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+      api_collection_followers_url(collection.alias, host: federation_host, only_path: false)
+    end
+
+    def api_collection_followers_url(alias_, options = {})
+      Rails.application.routes.url_helpers.api_collection_followers_url(alias_, **options)
     end
   end
 end

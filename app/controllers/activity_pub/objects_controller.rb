@@ -41,11 +41,16 @@ module ActivityPub
     end
 
     def post_url(post)
+      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
       if post.collection
-        "#{api_collection_url(post.collection.alias)}/#{post.slug}"
+        "#{api_collection_url(post.collection.alias, host: federation_host, only_path: false)}/#{post.slug || post.id}"
       else
-        "#{api_collection_url(post.owner.username)}/d/#{post.id}"
+        "#{api_collection_url(post.owner.username, host: federation_host, only_path: false)}/d/#{post.id}"
       end
+    end
+
+    def api_collection_url(alias_, options = {})
+      Rails.application.routes.url_helpers.api_collection_url(alias_, **options)
     end
   end
 end
