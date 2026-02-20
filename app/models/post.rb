@@ -12,15 +12,13 @@ class Post < ApplicationRecord
   def ap_id
     return super if super.present?
 
-    federation_host = ENV.fetch("FEDERATION_HOST", "localhost")
-    federation_port = ENV.fetch("FEDERATION_PORT", 3000).to_i
-    host_options = { host: federation_host, port: federation_port }
+    federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
 
     if collection
       path = slug.present? ? slug : id
-      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, **host_options)}/#{path}"
+      "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, host: federation_host, only_path: false)}/#{path}"
     else
-      Rails.application.routes.url_helpers.draft_post_url(self, **host_options)
+      Rails.application.routes.url_helpers.draft_post_url(self, host: federation_host, only_path: false)
     end
   end
 
