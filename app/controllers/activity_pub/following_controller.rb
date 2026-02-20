@@ -8,7 +8,7 @@ module ActivityPub
       # In the future, we would have a remote_following table
       following = {
         "@context": "https://www.w3.org/ns/activitystreams",
-        "id": collection_following_url(@collection),
+        "id": ActivityPub::Urls.following_url(@collection.alias),
         "type": "OrderedCollection",
         "totalItems": 0,
         "orderedItems": []
@@ -21,15 +21,6 @@ module ActivityPub
     def set_collection
       @collection = Collection.find_by(alias: params[:collection_alias])
       return head :not_found if @collection.nil?
-    end
-
-    def collection_following_url(collection)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      api_collection_following_url(collection.alias, host: federation_host, only_path: false)
-    end
-
-    def api_collection_following_url(alias_, options = {})
-      Rails.application.routes.url_helpers.api_collection_following_url(alias_, **options)
     end
   end
 end

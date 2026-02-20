@@ -9,7 +9,7 @@ module ActivityPub
 
       outbox = {
         "@context": "https://www.w3.org/ns/activitystreams",
-        "id": collection_outbox_url(@collection),
+        "id": ActivityPub::Urls.outbox_url(@collection.alias),
         "type": "OrderedCollection",
         "totalItems": public_posts.count,
         "orderedItems": public_posts.map { |post| post_activity(post) }
@@ -28,57 +28,27 @@ module ActivityPub
       {
         "@context": "https://www.w3.org/ns/activitystreams",
         "type": "Create",
-        "id": post_activity_url(post),
+        "id": ActivityPub::Urls.create_activity_id(@collection.alias, post.id),
         "actor": @collection.actor_id,
         "published": post.created_at.iso8601,
         "to": ["https://www.w3.org/ns/activitystreams#Public"],
-        "cc": [api_collection_followers_url(@collection.alias)],
+        "cc": [ActivityPub::Urls.followers_url(@collection.alias)],
         "object": note_object(post)
       }
     end
 
     def note_object(post)
       {
-        "id": post.ap_id || post_url(post),
+        "id": ActivityPub::Urls.post_url(post),
         "type": "Note",
         "attributedTo": @collection.actor_id,
         "content": post.content,
         "published": post.created_at.iso8601,
-        "url": post_url(post),
+        "url": ActivityPub::Urls.post_url(post),
         "to": ["https://www.w3.org/ns/activitystreams#Public"],
-        "cc": [api_collection_followers_url(@collection.alias)]
+        "cc": [ActivityPub::Urls.followers_url(@collection.alias)]
       }
     end
 
-    def collection_outbox_url(collection)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      api_collection_outbox_url(collection.alias, host: federation_host, only_path: false)
-    end
-
-    def post_activity_url(post)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      "#{api_collection_outbox_url(@collection.alias, host: federation_host, only_path: false)}##{post.id}/activity"
-    end
-
-    def post_url(post)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      if post.collection
-        "#{api_collection_url(post.collection.alias, host: federation_host, only_path: false)}/#{post.slug || post.id}"
-      else
-        "#{api_collection_url(post.owner.username, host: federation_host, only_path: false)}/d/#{post.id}"
-      end
-    end
-
-    def api_collection_url(alias_, options = {})
-      Rails.application.routes.url_helpers.api_collection_url(alias_, **options)
-    end
-
-    def api_collection_outbox_url(alias_, options = {})
-      Rails.application.routes.url_helpers.api_collection_outbox_url(alias_, **options)
-    end
-
-    def api_collection_followers_url(alias_, options = {})
-      Rails.application.routes.url_helpers.api_collection_followers_url(alias_, **options)
-    end
   end
 end

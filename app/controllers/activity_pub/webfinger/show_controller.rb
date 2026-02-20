@@ -7,8 +7,7 @@ module ActivityPub
         resource = params[:resource]
         return head :bad_request if resource.blank?
 
-        federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-        federation_domain = federation_host.split(":").first  # Extract just the domain part
+        federation_domain = ActivityPub::Urls.federation_domain
 
         # Parse acct:user@host format
         if resource.start_with?("acct:")
@@ -19,15 +18,14 @@ module ActivityPub
           if host == federation_domain
             collection = Collection.find_by(alias: username)
             if collection
-              host_options = { host: federation_host, only_path: false }
               render json: {
                 "subject" => resource,
-                "aliases" => [api_collection_url(username, host_options)],
+                "aliases" => [ActivityPub::Urls.actor_url(username)],
                 "links" => [
                   {
                     "rel" => "self",
                     "type" => "application/activity+json",
-                    "href" => api_collection_actor_url(username, host_options)
+                    "href" => ActivityPub::Urls.actor_url(username)
                   }
                 ]
               }
@@ -37,16 +35,6 @@ module ActivityPub
         end
 
         head :not_found
-      end
-
-      private
-
-      def api_collection_url(alias_, options = {})
-        Rails.application.routes.url_helpers.api_collection_url(alias_, **options)
-      end
-
-      def api_collection_actor_url(alias_, options = {})
-        Rails.application.routes.url_helpers.api_collection_actor_url(alias_, **options)
       end
     end
   end

@@ -26,7 +26,7 @@ class Post < ApplicationRecord
   def set_ap_id
     return if self.ap_id.present?
 
-    update_column(:ap_id, generate_ap_id)
+    update_column(:ap_id, ActivityPub::Urls.post_url(self))
   end
 
   def federate_creation
@@ -35,7 +35,7 @@ class Post < ApplicationRecord
     return unless collection.private_key.present?
 
     # Set the AP ID before federating
-    update_column(:ap_id, generate_ap_id)
+    update_column(:ap_id, ActivityPub::Urls.post_url(self))
 
     # Federate in background
     ActivityPub::Service.federate_post(collection, self, action: :create)
@@ -48,7 +48,7 @@ class Post < ApplicationRecord
     return unless saved_change_to_content? || saved_change_to_title?
 
     # Ensure AP ID is set
-    update_column(:ap_id, generate_ap_id)
+    update_column(:ap_id, ActivityPub::Urls.post_url(self))
 
     ActivityPub::Service.federate_post(collection, self, action: :update)
   end

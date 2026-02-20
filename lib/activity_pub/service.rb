@@ -128,11 +128,11 @@ module ActivityPub
       {
         "@context": "https://www.w3.org/ns/activitystreams",
         "type": "Create",
-        "id": "#{api_collection_outbox_url(collection.alias)}##{post.id}/create",
+        "id": Urls.create_activity_id(collection.alias, post.id),
         "actor": collection.actor_id,
         "published": post.created_at.iso8601,
         "to": ["https://www.w3.org/ns/activitystreams#Public"],
-        "cc": [api_collection_followers_url(collection.alias)],
+        "cc": [Urls.followers_url(collection.alias)],
         "object": build_note_object(collection, post)
       }
     end
@@ -142,11 +142,11 @@ module ActivityPub
       {
         "@context": "https://www.w3.org/ns/activitystreams",
         "type": "Update",
-        "id": "#{api_collection_outbox_url(collection.alias)}##{post.id}/update",
+        "id": Urls.update_activity_id(collection.alias, post.id),
         "actor": collection.actor_id,
         "published": post.updated_at.iso8601,
         "to": ["https://www.w3.org/ns/activitystreams#Public"],
-        "cc": [api_collection_followers_url(collection.alias)],
+        "cc": [Urls.followers_url(collection.alias)],
         "object": build_note_object(collection, post)
       }
     end
@@ -156,13 +156,13 @@ module ActivityPub
       {
         "@context": "https://www.w3.org/ns/activitystreams",
         "type": "Delete",
-        "id": "#{api_collection_outbox_url(collection.alias)}##{post.id}/delete",
+        "id": Urls.delete_activity_id(collection.alias, post.id),
         "actor": collection.actor_id,
         "published": Time.now.utc.iso8601,
         "to": ["https://www.w3.org/ns/activitystreams#Public"],
-        "cc": [api_collection_followers_url(collection.alias)],
+        "cc": [Urls.followers_url(collection.alias)],
         "object": {
-          "id": post_url(collection, post),
+          "id": Urls.post_url(post),
           "type": "Tombstone"
         }
       }
@@ -173,7 +173,7 @@ module ActivityPub
       {
         "@context": "https://www.w3.org/ns/activitystreams",
         "type": "Accept",
-        "id": "#{collection.actor_id}#accepts/#{remote_user.actor_id}/#{Time.now.to_i}",
+        "id": Urls.accept_activity_id(collection.actor_id, remote_user.actor_id),
         "actor": collection.actor_id,
         "to": [remote_user.actor_id],
         "object": {
@@ -188,41 +188,16 @@ module ActivityPub
     # Build a Note object from a post
     def self.build_note_object(collection, post)
       {
-        "id": post_url(collection, post),
+        "id": Urls.post_url(post),
         "type": "Note",
         "attributedTo": collection.actor_id,
         "content": post.content,
         "published": post.created_at.iso8601,
-        "url": post_url(collection, post),
+        "url": Urls.post_url(post),
         "to": ["https://www.w3.org/ns/activitystreams#Public"],
-        "cc": [api_collection_followers_url(collection.alias)]
+        "cc": [Urls.followers_url(collection.alias)]
       }
     end
 
-    # Get the URL for a post
-    def self.post_url(collection, post)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      if post.collection
-        "#{Rails.application.routes.url_helpers.api_collection_url(collection.alias, host: federation_host, only_path: false)}/#{post.slug}"
-      else
-        Rails.application.routes.url_helpers.draft_post_url(post, host: federation_host, only_path: false)
-      end
-    end
-
-    # Helper for URL generation
-    def self.api_collection_url(alias_)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      Rails.application.routes.url_helpers.api_collection_url(alias_, host: federation_host, only_path: false)
-    end
-
-    def self.api_collection_outbox_url(alias_)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      Rails.application.routes.url_helpers.api_collection_outbox_url(alias_, host: federation_host, only_path: false)
-    end
-
-    def self.api_collection_followers_url(alias_)
-      federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
-      Rails.application.routes.url_helpers.api_collection_followers_url(alias_, host: federation_host, only_path: false)
-    end
   end
 end
