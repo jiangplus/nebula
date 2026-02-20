@@ -17,8 +17,11 @@ class Collection < ApplicationRecord
   end
 
   def actor_id
-    # Generate actor_id if not set
-    super || "#{Rails.application.routes.url_helpers.api_collection_url(self.alias)}"
+    # Generate actor_id if not set using federation host
+    return super if super.present?
+
+    federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+    Rails.application.routes.url_helpers.api_collection_url(self.alias, host: federation_host, only_path: false)
   end
 
   private
@@ -36,7 +39,8 @@ class Collection < ApplicationRecord
     self.private_key = key.to_pem
     self.public_key = key.public_key.to_pem
 
-    # Set actor_id based on the collection URL
-    self.actor_id = "#{Rails.application.routes.url_helpers.api_collection_url(self.alias)}"
+    # Set actor_id based on the collection URL using federation host
+    federation_host = ENV.fetch("FEDERATION_HOST", "localhost:3000")
+    self.actor_id = Rails.application.routes.url_helpers.api_collection_url(self.alias, host: federation_host, only_path: false)
   end
 end
