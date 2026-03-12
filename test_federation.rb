@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby
 # ActivityPub Federation Testing Script
 # Tests WebFinger discovery, actor profiles, outbox, followers/following
+#
+# Usage: rails runner test_federation.rb [base_url] [collection_alias]
+# Examples:
+#   rails runner test_federation.rb
+#   rails runner test_federation.rb http://127.0.0.1:3000
+#   rails runner test_federation.rb http://127.0.0.1:3000 opensea
 
 require 'net/http'
 require 'json'

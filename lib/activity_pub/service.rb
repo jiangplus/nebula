@@ -1,4 +1,10 @@
 # Service for ActivityPub operations like fetching remote actors and sending activities
+require "net/http"
+require "json"
+require "base64"
+require "digest"
+require "openssl"
+
 module ActivityPub
   class Service
     # Fetch a remote actor by URL
@@ -74,9 +80,14 @@ module ActivityPub
       request["Digest"] = digest
       request.body = body
 
-      # Sign the request
-      signature = ActivityPub::HttpSignature.sign(request, collection.private_key, collection.actor_id)
-      request["Signature"] = signature
+      # Sign the request with RSA-SHA256 HTTP Signature
+      key_id      = "#{collection.actor_id}#main-key"
+      host        = "#{uri.host}:#{uri.port}"
+      target      = "post #{uri.request_uri}"
+      signed_str  = "(request-target): #{target}\nhost: #{host}\ndate: #{request['Date']}\ndigest: #{digest}"
+      rsa_key     = OpenSSL::PKey::RSA.new(collection.private_key)
+      sig_b64     = Base64.strict_encode64(rsa_key.sign(OpenSSL::Digest::SHA256.new, signed_str))
+      request["Signature"] = %(keyId="#{key_id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="#{sig_b64}")
 
       begin
         response = http.request(request)

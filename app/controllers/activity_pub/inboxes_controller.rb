@@ -5,7 +5,7 @@ module ActivityPub
     before_action :verify_signature, only: [:create]
 
     def create
-      activity = params.permit!.to_h
+      activity = JSON.parse(request.body.read)
 
       case activity["type"]
       when "Follow"
