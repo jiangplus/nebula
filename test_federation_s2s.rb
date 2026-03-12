@@ -651,10 +651,9 @@ class InboxSuite < TestSuite
              "unknown type caused error — HTTP #{res[:code]}")
     end
 
-    step("Malformed JSON body → 400 or 500 (not silently 202)") do
+    step("Malformed JSON body → 400") do
       res = ap_post_raw(inbox, "{ this is not valid json }")
-      assert([400, 422, 500].include?(res[:code]),
-             "expected error for malformed JSON, got #{res[:code]}")
+      assert(res[:code] == 400, "expected 400, got #{res[:code]}")
       info "HTTP #{res[:code]} — server correctly rejected bad JSON"
     end
 

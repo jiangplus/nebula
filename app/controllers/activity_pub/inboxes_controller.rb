@@ -4,8 +4,11 @@ module ActivityPub
     before_action :set_collection
     before_action :verify_signature, only: [:create]
 
+    rescue_from JSON::ParserError, with: -> { head :bad_request }
+
     def create
       activity = JSON.parse(request.body.read)
+      return head :bad_request if activity.blank?
 
       case activity["type"]
       when "Follow"
