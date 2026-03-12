@@ -6,6 +6,10 @@ module ActivityPub
 
     rescue_from JSON::ParserError, with: -> { head :bad_request }
 
+    def show
+      head :method_not_allowed
+    end
+
     def create
       activity = JSON.parse(request.body.read)
       return head :bad_request if activity.blank?

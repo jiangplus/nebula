@@ -12,7 +12,7 @@ module ActivityPub
 
     # Actor-level URLs
     def self.actor_url(collection_alias)
-      helpers.api_collection_url(collection_alias, **host_options)
+      helpers.api_collection_actor_url(collection_alias, **host_options)
     end
 
     def self.inbox_url(collection_alias)
@@ -45,8 +45,8 @@ module ActivityPub
 
       if post.collection_id.present?
         collection = post.collection
-        path = post.slug.presence || post.id
-        helpers.api_collection_url(collection.alias, path, **host_options)
+        path = post.slug.presence || post.id.to_s
+        helpers.collection_post_url(collection.alias, path, **host_options)
       else
         helpers.draft_post_url(post, **host_options)
       end

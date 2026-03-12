@@ -49,7 +49,7 @@ Rails.application.routes.draw do
 
     resources :collections, param: :alias do
       resources :posts, only: [:index, :create, :show, :update], controller: "collections/posts"
-      resource :inbox, only: [:create], controller: "/activity_pub/inboxes"
+      resource :inbox, only: [:create, :show], controller: "/activity_pub/inboxes"
       resource :outbox, only: [:show], controller: "/activity_pub/outboxes"
       resource :followers, only: [:show], controller: "/activity_pub/followers"
       resource :following, only: [:show], controller: "/activity_pub/following"
